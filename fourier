@@ -1,0 +1,97 @@
+let angle = 0;
+let time = 0;
+let wave = [];
+let slider;
+
+function setup() {
+  createCanvas(1000, 400);
+  slider = createSlider(1, 200, 3);
+}
+
+function draw() {
+  background (230);
+  time += 0.015
+  translate(250, 200)
+
+  let x = 0;
+  let y = 0;
+
+  for (let i = 0; i < slider.value(); i ++) {
+    let prevx = x;
+    let prevy = y;
+    let n = i * 2 + 1;
+    let radius = 100 * (4 / (n * PI));
+    x += radius * cos(n * time);
+    y += radius * sin(n * time);
+
+    stroke(0, 255 - i * 20)
+    noFill();
+    ellipse(prevx, prevy, radius * 2); // circles
+
+    fill(255, 100);
+    ellipse(x, y, 3); // circles dot
+
+
+    noFill();
+    line (x, y, prevx, prevy); // circles to dots
+    }
+
+    wave.unshift(y);
+    stroke(0, 245);
+    line (x, y, 250, y); // circles to wave
+    ellipse(250, y, 3); // waves dot
+
+beginShape();
+  for (let i = 0; i < wave.length; i++) {
+    vertex(i + 250, wave[i]);
+  }
+  endShape();
+
+  if (wave.length > 450) {
+    wave.pop();
+  }
+
+}
+
+/*var soundWave;
+var soundWave2;
+var soundWave3;
+let x = 400
+let y = 1
+
+function setup() {
+  createCanvas(100, 100);
+
+  soundWave = new p5.Oscillator();
+  soundWave.setType('sine');
+  soundWave.amp(y)
+  soundWave.freq(x)
+  soundWave.start();
+  soundWave2 = new p5.Oscillator();
+  soundWave2.setType('sine');
+  soundWave2.amp(y/3)
+  soundWave2.freq(x * 3);
+  soundWave2.start();
+  soundWave3 = new p5.Oscillator();
+  soundWave3.setType('sine');
+  soundWave3.amp(y/5)
+  soundWave3.freq(x * 5);
+  soundWave3.start();
+}
+
+function draw() {
+  background(123)
+}
+
+function mousePressed() {
+soundWave.start();
+soundWave2.start();
+soundWave3 .start();
+}
+
+function keyPressed() {
+soundWave.stop();
+soundWave2.stop();
+soundWave3.stop();
+}
+*/
