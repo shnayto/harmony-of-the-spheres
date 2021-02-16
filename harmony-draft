@@ -1,0 +1,197 @@
+// Harmony of the Spheres Draft
+// Nathan Ó Maoilearca 2020
+
+//visuals
+let sun, planets = [], radii = [];
+//sounds
+let playing = false, oscillators = [], frequencies = [],
+soundLoop, soundLoopControlRate, intervalInSeconds = 60;;
+//maths
+let distances = [], gConst = 0.01, slider, lineVector, lineVectors = [];
+
+function setup(){
+  createCanvas(800, 800);
+  //soundLoop temporarily set to loop every minute and
+  //ControlRate to monitor pitch change
+  soundLoop = new p5.SoundLoop(onSoundLoop, intervalInSeconds);
+  soundLoop.start();
+  //ControlRate ISSUE! caused by draw rate and control rate conflict?
+  soundLoopControlRate = new p5.SoundLoop(onSoundLoopControlRate, 1);
+  soundLoopControlRate.start();
+  //new planets, sun and oscillators
+  for (i = 0; i < 2; i++) {
+  planets.push(new Planet(width/2 + 110 + (i + 1) *35, height/2+0, 2));
+  oscillators.push(new p5.Oscillator('sine'));
+  radii.push(new Radius());
+  }
+  //gravity slider (gConst)
+  gravity = createSlider(0.005, 0.02, 0.01, 0.0001);
+}
+
+function draw(){
+  background(45, 35, 35);
+//  frameRate(5);
+  // value for gravitational constant
+  gConst = gravity.value();
+  sun = new Sun(width/2, height/2, 33000, gConst);
+  //display planets, sun
+    for (i = 0; i < planets.length; i++) {
+      planets[i].show();
+      planets[i].move();
+      sun.attract(planets[i]);
+      oscillators[i].freq(frequencies[i]);
+      oscillators[i].amp(0.5/planets.length);
+      strokeWeight(2);
+      stroke(255, 50);
+      radii[i].show(sun, planets[i]);
+    //  line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
+    }
+
+//PROBLEM CHILD
+  let randLine = line(planets[0].pos.x, planets[0].pos.y, planets[1].pos.x, planets[1].pos.y);
+    let bigB = dist(sun.pos.x, sun.pos.y, planets[0].pos.x, planets[0].pos.y);
+    let bigC = dist(sun.pos.x, sun.pos.y, planets[1].pos.x, planets[1].pos.y);
+    let bigA = dist(planets[0].pos.x, planets[0].pos.y, planets[1].pos.x, planets[1].pos.y);
+
+    let littleA = (sq(bigB)+sq(bigC)-sq(bigA))/(2*bigB*bigC);
+    let angleA = cos(littleA);
+  //  console.log(littleA);
+
+    if (littleA > 0.999) {
+      console.log('intersect')
+    }
+
+    // let littleB = (sq(bigC)+sq(bigA)-sq(bigB))/(2*bigA*bigC);
+    // let angleB = cos(littleB);
+  // console.log(degrees(angleB));
+
+//  console.log(angleC);
+// POTENTIAL SOLUTION 1: SLIGHTLY ABSTRACT
+
+// push()
+// translate(200, 200);
+//     let lineC = (line(50, 50, 200, 200));
+//     let sideC = dist(50, 50, 200, 200); // c hypotenuse
+//   //  console.log(sideC) = 212.13
+//     let lineB = (line(50, 50, mouseX-200, mouseY-200));
+//     let sideB = dist(50, 50, mouseX-200, mouseY-200); // b top
+//   //  console.log(sideB); == 250
+//     let lineA = (line(mouseX-200, mouseY-200, 200, 200));
+//     let sideA = dist(mouseX-200, mouseY-200, 200, 200); // a side
+//   //  console.log(sideA); //== 150
+//
+//     let littleA = (sq(sideB)+sq(sideC)-sq(sideA))/(2*sideB*sideC);
+//     let angleA = cos(littleA);
+//   console.log((littleA));
+//
+// pop();
+
+
+     sun.show();
+
+
+
+    //ATTEMPT at aligning vectors
+    // lineVector = createVector(planets[0].pos.x - width/2, planets[0].pos.y - height/2);
+    // lineVector2 =  createVector(planets[1].pos.x - width/2, planets[1].pos.y - height/2);
+    // let myHeading = lineVector.heading();
+    // let myHeading2 = lineVector2.heading();
+    // noStroke();
+    // text('vector heading: ' + myHeading.toFixed(2) + ' radians ', 10, 10, 90, 50);
+    // if (myHeading.toFixed(2) == myHeading2.toFixed(2)){
+    //   console.log('add note to chain')
+    // }
+
+    //SECOND ATTEMPT
+
+}
+
+function onSoundLoop(){
+  for (let i = 0; i < planets.length; i++){
+    oscillators[i].start();
+  }
+}
+
+function onSoundLoopControlRate(){
+  for (let i = 0; i < planets.length; i++){
+    distances[i] = dist(planets[i].pos.x, planets[i].pos.y, sun.pos.x, sun.pos.y);
+    frequencies[i] = map(distances[i], 0, 400, 600, 50);
+  }
+}
+
+function mousePressed(){
+  if (playing == true) {
+    playing = false
+    for (let i = 0; i < planets.length; i++){
+      oscillators[i].stop();
+    }
+  } else {
+    playing = true;
+    onSoundLoop();
+  }
+}
+
+class Radius {
+  constructor(planet) {
+  }
+
+  show(sun, planet) {
+    stroke(232, 90);
+    line(sun.pos.x, sun.pos.y, planet.pos.x, planet.pos.y);
+  }
+}
+
+class Sun {
+   constructor(x, y, m, g) {
+     this.pos = createVector(x, y);
+     this.mass = m;
+     this.r = sqrt(this.mass) / 8 ;
+     this.g = g
+   }
+
+   show() {
+    noStroke();
+    fill(235, 204, 48);
+    ellipse(this.pos.x, this.pos.y, this.r*2);
+   }
+
+   attract(planet){
+     let force = p5.Vector.sub(this.pos, planet.pos);
+     let distance = force.mag();
+     let distanceSq = force.magSq();
+     let distanceCub = distance * distanceSq;
+     let strength = this.g * (this.mass * planet.mass) / distanceSq;
+     force.setMag(strength);
+     planet.applyForce(force);
+     // let periodSq = ((4 * PI * PI) / this.g * this.mass) * distanceCub;
+     // let period = sqrt(periodSq);
+     // console.log(period);
+     }
+}
+
+class Planet {
+  constructor(x, y, m){
+    this.pos = createVector(x, y);
+    this.vel = createVector(0, -1);
+    this.acc = createVector(0, 0);
+    this.mass = m;
+    this.r = sqrt(this.mass) * 7;
+  }
+
+  applyForce(force) {
+    let f = p5.Vector.div(force, this.mass);
+    this.acc.add(f);
+  }
+  move(){
+    this.vel.add(this.acc);
+    this.pos.add(this.vel);
+    this.acc.set(0, 0);
+  }
+
+  show(){
+    stroke(145);
+    fill(245, 150)
+    strokeWeight(2);
+    ellipse(this.pos.x, this.pos.y, this.r);
+  }
+}
