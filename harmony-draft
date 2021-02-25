@@ -1,121 +1,77 @@
-// Harmony of the Spheres Draft
-// Nathan Ó Maoilearca 2020
+// // Harmony of the Spheres Draft
+// // Nathan Ó Maoilearca 2020
 
 //visuals
-let sun, planets = [], radii = [];
+let sun, planets = [], radii = [], e = 15.36, planetRadii = [50, 15, 20, 30],
+planetColours = [], tempPlanetSpecs = [];
 //sounds
 let playing = false, oscillators = [], frequencies = [],
-soundLoop, soundLoopControlRate, intervalInSeconds = 60;;
+soundLoop, intervalInSeconds = 60;;
 //maths
-let distances = [], gConst = 0.01, slider, lineVector, lineVectors = [];
+let gConst = 0.01, slider, tempPlanet = false, pulse = 0, angleNewPlanet;
 
 function setup(){
-  createCanvas(800, 800);
+  createCanvas(windowWidth, windowHeight);
   //soundLoop temporarily set to loop every minute and
-  //ControlRate to monitor pitch change
   soundLoop = new p5.SoundLoop(onSoundLoop, intervalInSeconds);
   soundLoop.start();
-  //ControlRate ISSUE! caused by draw rate and control rate conflict?
-  soundLoopControlRate = new p5.SoundLoop(onSoundLoopControlRate, 1);
-  soundLoopControlRate.start();
-  //new planets, sun and oscillators
-  for (i = 0; i < 2; i++) {
-  planets.push(new Planet(width/2 + 110 + (i + 1) *35, height/2+0, 2));
+
+  for (i = 0; i < 4; i++) {
+// arguments:              x ,           y,             m, radius,         g,      eccentricty
+  planets.push(new Planet((i * 0.2) + 1, (i * 0.2) + 1, 1, planetRadii[i], gConst, e - i));
   oscillators.push(new p5.Oscillator('sine'));
   radii.push(new Radius());
   }
   //gravity slider (gConst)
-  gravity = createSlider(0.005, 0.02, 0.01, 0.0001);
+  gravity = createSlider(0.0005, 0.5, gConst, 0.00001);
+  gConst = gravity.value();
+  sun = new Sun(width/2, height/2, 33000, gConst);
 }
 
 function draw(){
   background(45, 35, 35);
-//  frameRate(5);
-  // value for gravitational constant
-  gConst = gravity.value();
-  sun = new Sun(width/2, height/2, 33000, gConst);
-  //display planets, sun
-    for (i = 0; i < planets.length; i++) {
-      planets[i].show();
-      planets[i].move();
-      sun.attract(planets[i]);
-      oscillators[i].freq(frequencies[i]);
-      oscillators[i].amp(0.5/planets.length);
-      strokeWeight(2);
-      stroke(255, 50);
-      radii[i].show(sun, planets[i]);
-    //  line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
+  let radiusLines;
+//display planets, sun, radius lines & apply gravity
+  for (i = 0; i < planets.length; i++) {
+    planets[i].show();
+    planets[i].move();
+    sun.attract(planets[i]);
+    oscillators[i].freq(frequencies[i]);
+    oscillators[i].amp(0.5/planets.length);
+    radii[i].show(sun, planets[i]);
+    radiusLines = line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
     }
+  sun.show();
+// create a new temporary planet when one is selected
+  if (tempPlanet == true) {
+    createTempPlanet();
+  }
+}
 
-//PROBLEM CHILD
-  let randLine = line(planets[0].pos.x, planets[0].pos.y, planets[1].pos.x, planets[1].pos.y);
-    let bigB = dist(sun.pos.x, sun.pos.y, planets[0].pos.x, planets[0].pos.y);
-    let bigC = dist(sun.pos.x, sun.pos.y, planets[1].pos.x, planets[1].pos.y);
-    let bigA = dist(planets[0].pos.x, planets[0].pos.y, planets[1].pos.x, planets[1].pos.y);
+function createTempPlanet(){
+  tempPlanetPulse();
+  tempPlanetAngle();
+}
 
-    let littleA = (sq(bigB)+sq(bigC)-sq(bigA))/(2*bigB*bigC);
-    let angleA = cos(littleA);
-  //  console.log(littleA);
-
-    if (littleA > 0.999) {
-      console.log('intersect')
-    }
-
-    // let littleB = (sq(bigC)+sq(bigA)-sq(bigB))/(2*bigA*bigC);
-    // let angleB = cos(littleB);
-  // console.log(degrees(angleB));
-
-//  console.log(angleC);
-// POTENTIAL SOLUTION 1: SLIGHTLY ABSTRACT
-
-// push()
-// translate(200, 200);
-//     let lineC = (line(50, 50, 200, 200));
-//     let sideC = dist(50, 50, 200, 200); // c hypotenuse
-//   //  console.log(sideC) = 212.13
-//     let lineB = (line(50, 50, mouseX-200, mouseY-200));
-//     let sideB = dist(50, 50, mouseX-200, mouseY-200); // b top
-//   //  console.log(sideB); == 250
-//     let lineA = (line(mouseX-200, mouseY-200, 200, 200));
-//     let sideA = dist(mouseX-200, mouseY-200, 200, 200); // a side
-//   //  console.log(sideA); //== 150
-//
-//     let littleA = (sq(sideB)+sq(sideC)-sq(sideA))/(2*sideB*sideC);
-//     let angleA = cos(littleA);
-//   console.log((littleA));
-//
-// pop();
-
-
-     sun.show();
-
-
-
-    //ATTEMPT at aligning vectors
-    // lineVector = createVector(planets[0].pos.x - width/2, planets[0].pos.y - height/2);
-    // lineVector2 =  createVector(planets[1].pos.x - width/2, planets[1].pos.y - height/2);
-    // let myHeading = lineVector.heading();
-    // let myHeading2 = lineVector2.heading();
-    // noStroke();
-    // text('vector heading: ' + myHeading.toFixed(2) + ' radians ', 10, 10, 90, 50);
-    // if (myHeading.toFixed(2) == myHeading2.toFixed(2)){
-    //   console.log('add note to chain')
-    // }
-
-    //SECOND ATTEMPT
-
+function tempPlanetPulse() {
+  let pulsing = sin(pulse += 0.05);
+  stroke(145);
+  fill(245, 150)
+  strokeWeight(2);
+  ellipse(mouseX, mouseY, tempPlanetSpecs[0] + pulsing*5);
+}
+function tempPlanetAngle(){
+  let v2 = createVector(width/2, 0);
+  let v1 = createVector(mouseX - width/2, mouseY - height/2);
+  let angleBetween = v1.angleBetween(v2);
+  if (angleBetween < 0) {
+    angleNewPlanet = angleBetween  + TWO_PI;
+  } else {angleNewPlanet = angleBetween};
 }
 
 function onSoundLoop(){
   for (let i = 0; i < planets.length; i++){
     oscillators[i].start();
-  }
-}
-
-function onSoundLoopControlRate(){
-  for (let i = 0; i < planets.length; i++){
-    distances[i] = dist(planets[i].pos.x, planets[i].pos.y, sun.pos.x, sun.pos.y);
-    frequencies[i] = map(distances[i], 0, 400, 600, 50);
   }
 }
 
@@ -129,14 +85,34 @@ function mousePressed(){
     playing = true;
     onSoundLoop();
   }
+
+  for (let i = 0; i < planets.length; i++){
+    if (dist(mouseX, mouseY, planets[i].pos.x, planets[i].pos.y) < planets[i].r){
+      tempPlanetSpecs.push(planets[i].r);
+      planets.splice(i, 1);
+      setTimeout(timer, 10);
+    }
+  }
+  if (tempPlanet == true) {
+    resetPlanet();
+  }
+}
+
+function timer() {
+  tempPlanet = true;
+}
+
+function resetPlanet() {
+// push a new planet into the planets array, with the same specs as the one spliced
+  planets.push(new Planet(1, 1, 1, tempPlanetSpecs[0], gConst, e - 5, mouseX - width/2, mouseY - height/2, angleNewPlanet));
+  tempPlanet = false;
+  tempPlanetSpecs.length = 0;
 }
 
 class Radius {
-  constructor(planet) {
-  }
-
   show(sun, planet) {
-    stroke(232, 90);
+    strokeWeight(2);
+    stroke(232, 40);
     line(sun.pos.x, sun.pos.y, planet.pos.x, planet.pos.y);
   }
 }
@@ -145,7 +121,7 @@ class Sun {
    constructor(x, y, m, g) {
      this.pos = createVector(x, y);
      this.mass = m;
-     this.r = sqrt(this.mass) / 8 ;
+     this.r = sqrt(this.mass) / 8;
      this.g = g
    }
 
@@ -159,29 +135,35 @@ class Sun {
      let force = p5.Vector.sub(this.pos, planet.pos);
      let distance = force.mag();
      let distanceSq = force.magSq();
-     let distanceCub = distance * distanceSq;
      let strength = this.g * (this.mass * planet.mass) / distanceSq;
      force.setMag(strength);
      planet.applyForce(force);
-     // let periodSq = ((4 * PI * PI) / this.g * this.mass) * distanceCub;
-     // let period = sqrt(periodSq);
-     // console.log(period);
      }
 }
 
 class Planet {
-  constructor(x, y, m){
-    this.pos = createVector(x, y);
-    this.vel = createVector(0, -1);
+  constructor(x, y, m, r, g, e, mX, mY, a){
+    //creates a random angle within unit circle
+    let randomAngle = random(TWO_PI);
+    //set X and Y coordinates on unit circle accordingly
+    this.randAngleX = cos(a) || cos(randomAngle);
+    this.initialX = mX || this.randAngleX * 140;
+    this.randAngleY = - sin(a) || sin(randomAngle);
+    this.initialY = mY || this.randAngleY * 140;
+    // set coordinates to planet pos
+    this.pos = createVector(width/2 +(this.initialX * x), height/2 + (this.initialY * y));
+    // set initial ang velocity based on initial angle
+    this.vel = createVector(sqrt(g) * e * -this.randAngleY, sqrt(g) * e * this.randAngleX);
     this.acc = createVector(0, 0);
     this.mass = m;
-    this.r = sqrt(this.mass) * 7;
+    this.r = r;
   }
 
   applyForce(force) {
     let f = p5.Vector.div(force, this.mass);
     this.acc.add(f);
   }
+
   move(){
     this.vel.add(this.acc);
     this.pos.add(this.vel);
