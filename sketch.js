@@ -2,7 +2,7 @@
 // // Nathan Ó Maoilearca 2020
 
 //visuals
-let sun, planets = [], radii = [], e = 15.36, planetRadii = [10, 15, 25, 20, 40, 35, 30, 27],
+let sun, planets = [], radii = [], e = [15.36, 14.01, 12.98, 12.14, 11.45, 10.86, 10.35, /*this is random*/ 10.15] /*15.36*/, planetRadii = [10, 15, 25, 20, 40, 35, 30, 27],
 planetColours = [[233, 163, 100], [216, 157, 145], [15, 92, 166], [191, 54, 27], [143, 105, 64], [217, 177, 56], [121, 183, 224], [38, 104, 148]],
 tempPlanetSpecs = [];
 let planetOptions = [];
@@ -16,7 +16,7 @@ let fixedPitches = [1760/2, 1318.5/2, 880/2, 554.4/2, 415.3, 329.6/2, 220/2, 55]
 let pitches = [3321, 1300, 800, 425.2, 67.49, 27.16, 9.523, 4.855, 3.221];
 let fixedPitches = [3321, 1300, 800, 425.2, 67.49, 27.16, 9.523, 4.855, 3.221];
 */
-let playing = false, oscillators = [], frequencies = [], distances = [],
+let playing = false, oscillators = [], frequencies = [], initalDistances = [], currentDistances = [], differenceDistances = [],
 soundLoop, intervalInSeconds = Infinity;
 //maths
 let gConst = 0.01, slider, tempPlanet = false, pulse = 0, angleNewPlanet;
@@ -30,8 +30,10 @@ let currentPlanetPeriod, maxDistanceFromSun, minDistanceFromSun;
 let tempPlanetIndex;
 let tempPitch;
 let planetNumber;
-let lpFreq = 20000;
+let lpFreq = 20;
 let hpFreq = 20000;
+//        rnd/maxPlanetNumber
+let amp = 0.2/8;
 
 
 function setup(){
@@ -41,13 +43,11 @@ function setup(){
   soundLoop.start();
   lp = new p5.LowPass();
   lp.freq(lpFreq);
-  hp = new p5.LowPass();
-  hp.freq(hpFreq);
-  planetNumber = 8;
+  planetNumber = 1;
   for (i = 0; i < planetNumber; i++) {
 // arguments:              x ,           y,             m, radius,         colour,        g,      eccentricty
-  planets.push(new Planet((i * 0.2) + 1, (i * 0.2) + 1, 1, planetRadii[i] * 2, planetColours[i], gConst, e - i));
-
+  planets.push(new Planet((i * 0.2) + 1, (i * 0.2) + 1, 1, planetRadii[i] * 2, planetColours[i], gConst, e[i]));
+  initalDistances[i] = dist(planets[i].pos.x, planets[i].pos.y, width/2, height/2);
   planetOptions.push(new Planet(1, 1, 1, height/16, planetColours[i], gConst, e - i, width / 20 - width / 2, i * height/planetNumber - height / 2 + height / (planetNumber*2) + 1));
   oscillators.push(new p5.Oscillator('sine'));
   radii.push(new Radius());
@@ -55,6 +55,8 @@ function setup(){
   //inp = createInput('');
   //inp.input(myInputEvent);
 //  inp.position(100, 100 * i);
+  let button = createButton('add Planet');
+  button.mousePressed(planetNumber);
   }
   //gravity slider (gConst)
 
@@ -79,10 +81,10 @@ function draw(){
   let radiusLines;
   noFill();
   stroke(60, 50, 50);
-  //for every planet begin loop
-  // if (prevy.length > 20000) {
-  //   prevy.length = 19999;
-  //   prevx.length = 19999;
+//  for every planet begin loop
+  // if (prevy.length > 9000) {
+  //   prevy.length = 8999;
+  //   prevx.length = 8999;
   // }
   // for (let j = 0; j < planets.length; j++) {
   //   beginShape();
@@ -101,11 +103,11 @@ function draw(){
     planets[i].show();
     planets[i].move();
     sun.attract(planets[i]);
-    distances[i] = dist(planets[i].pos.x, planets[i].pos.y, sun.pos.x, sun.pos.y);
-    frequencies[i] = map(distances[i], 0, 400, 600, 50);
-
-    oscillators[i].freq(pitches[i]);
-    oscillators[i].amp(0.2/planetNumber);
+    currentDistances[i] = dist(planets[i].pos.x, planets[i].pos.y, sun.pos.x, sun.pos.y);
+    differenceDistances[i] = initalDistances[i] - currentDistances[i]
+                                // + differenceDistances[i]
+    oscillators[i].freq(pitches[i] + differenceDistances[i]);
+    oscillators[i].amp(0.2/8);
 
   //  radii[i].show(sun, planets[i]);
   //  radiusLines = line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
@@ -169,16 +171,14 @@ function createTempPlanet(){
 }
 
 function tempLowPassFall() {
-  lpFreq = constrain(lpFreq, 500, 10000);
+  lpFreq = constrain(lpFreq, 100, 10000);
   lpFreq *= 0.7;
-  //console.log(lpFreq);
   lp.freq(lpFreq);
 }
 
 function tempLowPassRise() {
   lpFreq = constrain(lpFreq, 300, 13333);
   lpFreq *= 1.5;
-  //console.log(lpFreq);
   lp.freq(lpFreq);
 }
 
@@ -217,8 +217,7 @@ function options() {
     if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
       planetOptions[i].optionAlpha = 150;
 //width / 20 - width / 2, i * height/8 - height / 2 + height / 16)
-      text(pitches[i].toFixed(1) + ' Hz', width/10, i * height/8 + height/15);
-      triangle(width/9, i * height/8 + height/20, width/9 + width/80, i * height/8 + height/30, width/9 + width/40, i * height/8 + height/20);
+      text(pitches[i].toFixed(1) + ' Hz', planetOptions[i].pos.x + 30, planetOptions[i].pos.y);
     } else {
       planetOptions[i].optionAlpha = 50;
     }
@@ -227,31 +226,62 @@ function options() {
 
 function mousePressed(){
   //inp.remove();
-  if (mouseY < 100) {
+  if (mouseY > height - 100) {
     onSoundLoop();
-
+  }
+  if (mouseY < 30 && mouseX > width/2 && planetNumber < 8){
+    //planetOptions.length - 1 == planetNumber
+    //planetNumber is increased at the end
+    let p = planetNumber;
+    planets.push(new Planet((planetNumber * 0.2) + 1, (planetNumber * 0.2) + 1, 1, planetRadii[planetNumber] * 2, planetColours[planetNumber], gConst, e[planetNumber]));
+    console.log(planetNumber);
+    planetOptions.push(new Planet(1, 1, 1, height/16, planetColours[planetNumber], gConst, e - i, width / 20 - width / 2, i * height/planetNumber - height / 2 + height / (planetNumber*2) + 1));
+    console.log(planetOptions.length);
+    oscillators.push(new p5.Oscillator('sine'));
+    oscillators[p].freq(pitches[p]);
+    oscillators[p].start();
+     for (let i = 0; i < planetOptions.length; i++) {
+       oscillators[i].amp(0.2/8);
+       planetOptions[i].pos.x = width / 20;
+       planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
+     }
+    radii.push(new Radius());
+    vertices.push(vertice);
+    planetNumber++;
+  }
+  if (mouseY < 30 && mouseX < width/2 && planetNumber > 1){
+    planetNumber--;
+    planets.pop()
+    planetOptions.pop();
+    oscillators[planetNumber].stop();
+    for (let i = 0; i < planetOptions.length; i++) {
+      planetOptions[i].pos.x = width / 20;
+      planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
+    }
   }
   for (let i = 0; i < planetOptions.length; i++){
     if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY < planetOptions[i].pos.y){
       pitches[i] *= 1.05948
+      oscillators[i].freq(pitches[i]);
     } else if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY > planetOptions[i].pos.y) {
       pitches[i] *= 0.944
+      oscillators[i].freq(pitches[i]);
     }
   }
   for (let i = 0; i < planets.length; i++){
-    oscillators[i].disconnect();
-    oscillators[i].connect(lp);
     if (dist(mouseX, mouseY, planets[i].pos.x, planets[i].pos.y) < planets[i].r){
       tempPlanetSpecs.push(planets[i].r, planets[i].c);
+      for (let j = 0; j < planets.length; j++){
+          oscillators[j].disconnect();
+          oscillators[j].connect(lp);
+      }
+      oscillators[i].disconnect();
+      oscillators[i].connect();
       planets.splice(i, 1);
       vertices.splice(i, 1);
       tempPlanetIndex = i;
       setTimeout(timer, 10);
-      oscillators[i].disconnect();
-      oscillators[i].connect(hp);
-
     }
-
   }
   if (tempPlanet == true) {
     resetPlanet();
@@ -264,13 +294,10 @@ function timer() {
 
 function resetPlanet() {
 // push a new planet into the planets array, with the same specs as the one spliced
-  planets.splice(tempPlanetIndex, 0, new Planet(1, 1, 1, tempPlanetSpecs[0], tempPlanetSpecs[1], gConst, e - 5, mouseX - width/2, mouseY - height/2, angleNewPlanet));
+  planets.splice(tempPlanetIndex, 0, new Planet(1, 1, 1, tempPlanetSpecs[0], tempPlanetSpecs[1], gConst, e[tempPlanetIndex], mouseX - width/2, mouseY - height/2, angleNewPlanet));
+  initalDistances[tempPlanetIndex] = dist(mouseX, mouseY, sun.pos.x, sun.pos.y);
   tempPlanet = false;
   tempPlanetSpecs.length = 0;
-  for (let i = 0; i < planets.length; i++){
-    oscillators[i].disconnect();
-    oscillators[i].connect(hp);
-  }
 }
 
 class Radius {
