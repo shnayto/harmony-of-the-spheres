@@ -1,8 +1,8 @@
 // // Harmony of the Spheres Draft
-// // Nathan Ó Maoilearca 2020
+// // Nathan Ó Maoilearca 2021
 
 //visuals
-let sun, planets = [], radii = [], e = [15.36, 14.01, 12.98, 12.14, 11.45, 10.86, 10.35, /*this is random*/ 10.15] /*15.36*/, planetRadii = [10, 15, 25, 20, 40, 35, 30, 27],
+let sun, planets = [], radii = [], moons = [[], [], [], [], [], [], [], []], e = [15.36, 14.01, 12.98, 12.14, 11.45, 10.86, 10.35, /*this is random*/ 10.15] /*15.36*/, planetRadii = [10, 15, 25, 20, 40, 35, 30, 27],
 planetColours = [[233, 163, 100], [216, 157, 145], [15, 92, 166], [191, 54, 27], [143, 105, 64], [217, 177, 56], [121, 183, 224], [38, 104, 148]],
 tempPlanetSpecs = [];
 let planetOptions = [];
@@ -34,7 +34,9 @@ let lpFreq = 20;
 let hpFreq = 20000;
 //        rnd/maxPlanetNumber
 let amp = 0.2/8;
-
+let xOffset, yOffset;
+let moonMode = false, solarSystemMode = true;
+let moonFridge = [];
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
@@ -74,7 +76,6 @@ console.log('you are typing: ', this.value());
 }
 //(width/2 +(this.initialX * x), height/2 + (this.initialY * y)
 
-
 function draw(){
   background(45, 35, 35);
     sun.show();
@@ -99,44 +100,60 @@ function draw(){
     planetOptions[i].showOptions();
     options();
   }
-  for (i = 0; i < planets.length; i++) {
-    planets[i].show();
-    planets[i].move();
-    sun.attract(planets[i]);
-    currentDistances[i] = dist(planets[i].pos.x, planets[i].pos.y, sun.pos.x, sun.pos.y);
-    differenceDistances[i] = initalDistances[i] - currentDistances[i]
-                                // + differenceDistances[i]
-    oscillators[i].freq(pitches[i] + differenceDistances[i]);
-    oscillators[i].amp(0.2/8);
+  if (moonMode) {
+    fill(tempPlanetSpecs[1]);
+    ellipse(sun.pos.x, sun.pos.y, sun.r*2);
+     for (i = 0; i < moons[tempPlanetIndex].length; i++) {
+         moons[tempPlanetIndex][i].show();
+         moons[tempPlanetIndex][i].move();
+         sun.attract(moons[tempPlanetIndex][i]);
+     }
 
-  //  radii[i].show(sun, planets[i]);
-  //  radiusLines = line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
-    prevx.push(planets[i].pos.x);
-    prevy.push(planets[i].pos.y);
+     //moons[tempPlanetIndex][i].show();
+     //moons[tempPlanetIndex][i].move();
+     //sun.attract(moons[tempPlanetIndex][i]);
 
-    let lineA = line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
-    let lineB = line(sun.pos.x, sun.pos.y, width, height/2);
-    let planetRound = round(planets[i].pos.y);
-    let yMidpoint = round(height/2);
-
-  // when the planet line aligns with the horizon
-    if (planetRound > yMidpoint - 5 && planets[i].pos.x > width/2 && planetRound < yMidpoint + 5) {
-      //add current time to array
-      currentTimeArray.push(performance.now());
-      maxDistanceFromSun = dist(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
-      //run function that returns an approximation of planet period
-      periodApprox(currentTimeArray);
-    //  console.log(currentPlanetPeriod);
-      setTimeout(minDist, currentPlanetPeriod/2);
   }
-}
+  if (solarSystemMode){
+    for (i = 0; i < planets.length; i++) {
+      planets[i].show();
+      planets[i].move();
+      sun.attract(planets[i]);
+      currentDistances[i] = dist(planets[i].pos.x, planets[i].pos.y, sun.pos.x, sun.pos.y);
+      differenceDistances[i] = initalDistances[i] - currentDistances[i]
+                                  // + differenceDistances[i]
+      oscillators[i].freq(pitches[i] + differenceDistances[i]);
+      oscillators[i].amp(0.2/8);
 
-// create a new temporary planet when one is selected
-  if (tempPlanet == true) {
-    createTempPlanet();
+    //  radii[i].show(sun, planets[i]);
+    //  radiusLines = line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
+      prevx.push(planets[i].pos.x);
+      prevy.push(planets[i].pos.y);
+
+      let lineA = line(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
+      let lineB = line(sun.pos.x, sun.pos.y, width, height/2);
+      let planetRound = round(planets[i].pos.y);
+      let yMidpoint = round(height/2);
+
+    // when the planet line aligns with the horizon
+      if (planetRound > yMidpoint - 5 && planets[i].pos.x > width/2 && planetRound < yMidpoint + 5) {
+        //add current time to array
+        currentTimeArray.push(performance.now());
+        maxDistanceFromSun = dist(sun.pos.x, sun.pos.y, planets[i].pos.x, planets[i].pos.y);
+        //run function that returns an approximation of planet period
+        periodApprox(currentTimeArray);
+      //  console.log(currentPlanetPeriod);
+        setTimeout(minDist, currentPlanetPeriod/2);
+    }
   }
-  if (tempPlanet == false) {
-    tempLowPassRise()
+
+  // create a new temporary planet when one is selected
+    if (tempPlanet == true) {
+      createTempPlanet();
+    }
+    if (tempPlanet == false) {
+      tempLowPassRise()
+    }
   }
 }
 
@@ -164,39 +181,6 @@ function frequencyCalculator() {
   }
 }
 
-function createTempPlanet(){
-  tempPlanetPulse();
-  tempPlanetAngle();
-  tempLowPassFall();
-}
-
-function tempLowPassFall() {
-  lpFreq = constrain(lpFreq, 100, 10000);
-  lpFreq *= 0.7;
-  lp.freq(lpFreq);
-}
-
-function tempLowPassRise() {
-  lpFreq = constrain(lpFreq, 300, 13333);
-  lpFreq *= 1.5;
-  lp.freq(lpFreq);
-}
-
-function tempPlanetPulse() {
-  let pulsing = sin(pulse += 0.05);
-  fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2], 100)
-  ellipse(mouseX, mouseY, tempPlanetSpecs[0] + pulsing*5);
-}
-
-function tempPlanetAngle(){
-  let v2 = createVector(width/2, 0);
-  let v1 = createVector(mouseX - width/2, mouseY - height/2);
-  let angleBetween = v1.angleBetween(v2);
-  if (angleBetween < 0) {
-    angleNewPlanet = angleBetween  + TWO_PI;
-  } else {angleNewPlanet = angleBetween};
-}
-
 function onSoundLoop(){
   if (playing == true) {
     playing = false
@@ -218,86 +202,201 @@ function options() {
       planetOptions[i].optionAlpha = 150;
 //width / 20 - width / 2, i * height/8 - height / 2 + height / 16)
       text(pitches[i].toFixed(1) + ' Hz', planetOptions[i].pos.x + 30, planetOptions[i].pos.y);
+    } else if (moonMode) {
+      planetOptions[tempPlanetIndex].optionAlpha = 150;
+      planetOptions[i].optionAlpha = 50;
     } else {
       planetOptions[i].optionAlpha = 50;
     }
  }
 
+let dragging = false;
+
+function mouseDragged(){
+  for (let t = 0; t < planets.length; t++){
+    if (dist(mouseX, mouseY, planets[t].pos.x, planets[t].pos.y) < planets[t].r){
+       tempPlanetSpecs.push(planets[t].r, planets[t].c);
+       for (let j = 0; j < planets.length; j++){
+           oscillators[j].disconnect();
+           oscillators[j].connect(lp);
+       }
+       oscillators[t].disconnect();
+       oscillators[t].connect();
+      if (!tempPlanet){
+        planets.splice(t, 1);
+        vertices.splice(t, 1);
+        tempPlanetIndex = t;
+      }
+      setTimeout(timer, 10);
+      dragging = true;
+      console.log('dragToDelete')
+    }
+  }
+}
 
 function mousePressed(){
   //inp.remove();
-  if (mouseY > height - 100) {
-    onSoundLoop();
-  }
-  if (mouseY < 30 && mouseX > width/2 && planetNumber < 8){
-    //planetOptions.length - 1 == planetNumber
-    //planetNumber is increased at the end
-    let p = planetNumber;
-    planets.push(new Planet((planetNumber * 0.2) + 1, (planetNumber * 0.2) + 1, 1, planetRadii[planetNumber] * 2, planetColours[planetNumber], gConst, e[planetNumber]));
-    console.log(planetNumber);
-    planetOptions.push(new Planet(1, 1, 1, height/16, planetColours[planetNumber], gConst, e - i, width / 20 - width / 2, i * height/planetNumber - height / 2 + height / (planetNumber*2) + 1));
-    console.log(planetOptions.length);
-    oscillators.push(new p5.Oscillator('sine'));
-    oscillators[p].freq(pitches[p]);
-    oscillators[p].start();
-     for (let i = 0; i < planetOptions.length; i++) {
-       oscillators[i].amp(0.2/8);
-       planetOptions[i].pos.x = width / 20;
-       planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
-     }
-    radii.push(new Radius());
-    vertices.push(vertice);
-    planetNumber++;
-  }
-  if (mouseY < 30 && mouseX < width/2 && planetNumber > 1){
-    planetNumber--;
-    planets.pop()
-    planetOptions.pop();
-    oscillators[planetNumber].stop();
-    for (let i = 0; i < planetOptions.length; i++) {
-      planetOptions[i].pos.x = width / 20;
-      planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
-    }
-  }
-  for (let i = 0; i < planetOptions.length; i++){
-    if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY < planetOptions[i].pos.y){
-      pitches[i] *= 1.05948
-      oscillators[i].freq(pitches[i]);
-    } else if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY > planetOptions[i].pos.y) {
-      pitches[i] *= 0.944
-      oscillators[i].freq(pitches[i]);
-    }
-  }
-  for (let i = 0; i < planets.length; i++){
-    if (dist(mouseX, mouseY, planets[i].pos.x, planets[i].pos.y) < planets[i].r){
-      tempPlanetSpecs.push(planets[i].r, planets[i].c);
-      for (let j = 0; j < planets.length; j++){
-          oscillators[j].disconnect();
-          oscillators[j].connect(lp);
-      }
-      oscillators[i].disconnect();
-      oscillators[i].connect();
-      planets.splice(i, 1);
-      vertices.splice(i, 1);
-      tempPlanetIndex = i;
-      setTimeout(timer, 10);
-    }
-  }
-  if (tempPlanet == true) {
+let spaceClicked = true;
+
+  if (tempPlanet == true && mouseY > height - height/10) {
+    planetDelete();
+    tempPlanet = false;
+    tempPlanetSpecs.length = 0;
+    spaceClicked = false;
+  } else if (tempPlanet == true) {
     resetPlanet();
+    spaceClicked = false;
+  }
+
+  if (mouseY < 30 && mouseX < width/2 && planetNumber > 1){
+    planetDelete();
+  }
+
+  for (let i = 0; i < planetOptions.length; i++){
+    if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
+      tempPlanetSpecs.length = 0;
+      tempPlanetIndex = i;
+      tempPlanetSpecs.push(planets[i].r, planets[i].c);
+      spaceClicked = false;
+      moonMode = true;
+      solarSystemMode = false;
+    }
+    // if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY < planetOptions[i].pos.y){
+    //   pitches[i] *= 1.05948
+    //   oscillators[i].freq(pitches[i]);
+    // } else if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY > planetOptions[i].pos.y) {
+    //   pitches[i] *= 0.944
+    //   oscillators[i].freq(pitches[i]);
+    // }
+  }
+  if (solarSystemMode){
+    for (let t = 0; t < planets.length; t++){
+    //  if (dist(planets[t].pos.x, planets[t].pos.y)
+      if (dist(mouseX, mouseY, planets[t].pos.x, planets[t].pos.y) < planets[t].r){
+        xOffset = mouseX - planets[t].pos.x;
+        yOffset = mouseY - planets[t].pos.y;
+        tempPlanetIndex = t;
+        tempPlanetSpecs.length = 0;
+        tempPlanetSpecs.push(planets[t].r, planets[t].c);
+        spaceClicked = false;
+        if (!dragging) {
+          setTimeout(timerDrag, 200);
+        }
+        dragging = false;
+      }
+    }
+  }
+
+  if (moonMode && dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*2){
+    moonMode = false;
+    solarSystemMode = true;
+    spaceClicked = false;
+    tempPlanetSpecs.length = 0;
+  }
+
+  if (spaceClicked && planetNumber < 8 && solarSystemMode) {
+    planetAdd();
+  }
+  if (spaceClicked && moonMode) {
+    moonAdd();
   }
 }
+
 
 function timer() {
   tempPlanet = true;
 }
 
+function timerDrag() {
+  if (dragging || mouseIsPressed) {
+    console.log('drag that');
+  } else {
+    console.log('moon mode baby!')
+    moonMode = true;
+    solarSystemMode = false;
+    spaceClicked = false;
+  }
+}
+
 function resetPlanet() {
 // push a new planet into the planets array, with the same specs as the one spliced
-  planets.splice(tempPlanetIndex, 0, new Planet(1, 1, 1, tempPlanetSpecs[0], tempPlanetSpecs[1], gConst, e[tempPlanetIndex], mouseX - width/2, mouseY - height/2, angleNewPlanet));
+  planets.splice(tempPlanetIndex, 0, new Planet(1, 1, 1, tempPlanetSpecs[0], tempPlanetSpecs[1], gConst, e[tempPlanetIndex], mouseX - xOffset - width/2, mouseY - yOffset - height/2, angleNewPlanet));
   initalDistances[tempPlanetIndex] = dist(mouseX, mouseY, sun.pos.x, sun.pos.y);
   tempPlanet = false;
   tempPlanetSpecs.length = 0;
+}
+
+function planetDelete() {
+  //!! STORE DELETED SPECS TO AVOID REPEATS
+  planetNumber--;
+  oscillators[planetNumber].stop();
+  planetOptions.splice(tempPlanetIndex, 1);
+  for (let i = 0; i < planetOptions.length; i++) {
+    planetOptions[i].pos.x = width / 20;
+    planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
+  }
+}
+
+function planetAdd() {
+  //planetOptions.length - 1 == planetNumber
+  //planetNumber is increased at the end
+  let p = planetNumber;
+  planets.push(new Planet((p * 0.2) + 1, (p * 0.2) + 1, 1, planetRadii[p] * 2, planetColours[p], gConst, e[p]));
+  planetOptions.push(new Planet(1, 1, 1, height/16, planetColours[planetNumber], gConst, e - i, width / 20 - width / 2, i * height/planetNumber - height / 2 + height / (planetNumber*2) + 1));
+  oscillators.push(new p5.Oscillator('sine'));
+  oscillators[p].freq(pitches[p]);
+  oscillators[p].start();
+   for (let i = 0; i < planetOptions.length; i++) {
+     oscillators[i].amp(0.2/8);
+     planetOptions[i].pos.x = width / 20;
+     planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
+   }
+  radii.push(new Radius());
+  vertices.push(vertice);
+  planetNumber++;
+}
+
+function moonAdd() {
+  console.log('moon added')
+  let moonNumber = moons.length;
+  let m = moonNumber;
+  let rm = random(1, moonNumber);
+  if (moons[tempPlanetIndex].length < 3){
+    moons[tempPlanetIndex].push(new Planet((2 * 0.2) + 1, (2 * 0.2) + 1, 1, planetRadii[2] * 2, [255, 224, 225], gConst, e[2]));
+  }
+}
+
+function createTempPlanet(){
+  tempPlanetPulse();
+  tempPlanetAngle();
+  tempLowPassFall();
+}
+
+function tempLowPassFall() {
+  lpFreq = constrain(lpFreq, 100, 10000);
+  lpFreq *= 0.7;
+  lp.freq(lpFreq);
+}
+
+function tempLowPassRise() {
+  lpFreq = constrain(lpFreq, 300, 13333);
+  lpFreq *= 1.5;
+  lp.freq(lpFreq);
+}
+
+function tempPlanetPulse() {
+  let pulsing = sin(pulse += 0.05);
+  fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2], 100)
+  ellipse(mouseX - xOffset, mouseY - yOffset, tempPlanetSpecs[0] + pulsing*5);
+}
+
+function tempPlanetAngle(){
+  let v2 = createVector(width/2, 0);
+  let v1 = createVector(mouseX - width/2, mouseY - height/2);
+  let angleBetween = v1.angleBetween(v2);
+  if (angleBetween < 0) {
+    angleNewPlanet = angleBetween  + TWO_PI;
+  } else {angleNewPlanet = angleBetween};
 }
 
 class Radius {
@@ -307,6 +406,7 @@ class Radius {
     line(sun.pos.x, sun.pos.y, planet.pos.x, planet.pos.y);
   }
 }
+
 class Sun {
    constructor(x, y, m, g) {
      this.pos = createVector(x, y);
@@ -330,6 +430,7 @@ class Sun {
      planet.applyForce(force);
      }
 }
+
 class Planet {
   constructor(x, y, m, r, c, g, e, mX, mY, a){
     //creates a random angle within unit circle
