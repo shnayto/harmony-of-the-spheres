@@ -1,5 +1,5 @@
 // // Harmony of the Spheres Draft
-// // Nathan Ó Maoilearca 2020
+// // Nathan Ó Maoilearca 2021
 
 //visuals
 
@@ -56,7 +56,7 @@ function setup(){
   // lp = new p5.LowPass();
   // lp.freq(lpFreq);
   planetNumber = 0;
-  pixelDensity(1);
+  pixelDensity(1.25);
 //   for (i = 0; i < planetNumber; i++) {
 // // arguments:              x ,           y,             m, radius,         colour,        g,      eccentricty
 //   // planets.push(new Planet((i * 0.2) + 1, (i * 0.2) + 1, 1, planetRadii[i] * 2, planetColours[i], gConst, e[i]));
@@ -271,14 +271,110 @@ function mouseDragged(){
   }
 }
 
-function mousePressed(){
-  //inp.remove();
-let spaceClicked = true;
-Tone.start();
-  if (started == false) {
-    started = true;
-  }
 
+let spaceClicked = true;
+
+// function mousePressed(){
+//   //inp.remove();
+// let spaceClicked = true;
+// Tone.start();
+//   if (started == false) {
+//     started = true;
+//   }
+//   planetPickedUp();
+//   planetOptionsHover();
+//   planetClick();
+//   returnToSolarSystemMode();
+//   if (spaceClicked && planetNumber < 8 && solarSystemMode) {
+//     planetAdd();
+//   }
+//   if (spaceClicked && moonMode) {
+//     moonAdd();
+//   }
+// }
+
+function touchStarted() {
+  Tone.start();
+    if (started == false) {
+      started = true;
+    }
+    console.log('silly?')
+    planetOptionsHover();
+    planetClick();
+    returnToSolarSystemMode();
+    console.log(spaceClicked)
+    if (spaceClicked && planetNumber < 8 && solarSystemMode) {
+      planetAdd();
+    }
+    if (spaceClicked && moonMode) {
+      moonAdd();
+    }
+    spaceClicked = true;
+    return false;
+}
+
+function touchEnded() {
+  // if (tempPlanet) {
+  //   resetPlanet();
+  // }
+  planetPickedUp();
+  spaceClicked = true;
+}
+
+function timer() {
+  tempPlanet = true;
+}
+
+function timerDrag() {
+  if (dragging || mouseIsPressed) {
+    console.log('drag that');
+  } else {
+    console.log('moon mode baby!')
+    moonMode = true;
+    solarSystemMode = false;
+    spaceClicked = false;
+  }
+}
+function returnToSolarSystemMode() {
+  if (moonMode && dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*2){
+    moonMode = false;
+    solarSystemMode = true;
+    spaceClicked = false;
+    tempPlanetSpecs.length = 0;
+  }
+}
+function planetClick() {
+  if (solarSystemMode){
+    for (let t = 0; t < planets.length; t++){
+    //  if (dist(planets[t].pos.x, planets[t].pos.y)
+      if (dist(mouseX, mouseY, planets[t].pos.x, planets[t].pos.y) < planets[t].r){
+        xOffset = mouseX - planets[t].pos.x;
+        yOffset = mouseY - planets[t].pos.y;
+        tempPlanetIndex = t;
+        tempPlanetSpecs.length = 0;
+        tempPlanetSpecs.push(planets[t].r, planets[t].c, pitches[t]);
+        spaceClicked = false;
+        if (!dragging) {
+          setTimeout(timerDrag, 200);
+        }
+        dragging = false;
+      }
+    }
+  }
+}
+function planetOptionsHover() {
+  for (let i = 0; i < planetOptions.length; i++){
+    if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
+      tempPlanetSpecs.length = 0;
+      tempPlanetIndex = i;
+      tempPlanetSpecs.push(planets[i].r, planets[i].c);
+      spaceClicked = false;
+      moonMode = true;
+      solarSystemMode = false;
+    }
+  }
+}
+function planetPickedUp() {
   if (tempPlanet == true && mouseY > height - height/10) {
     tempPlanet = false;
     //this should be somewhere else;
@@ -313,80 +409,7 @@ Tone.start();
       resetPlanet();
       spaceClicked = false;
   }
-
-  if (mouseY < 30 && mouseX < width/2 && planetNumber > 1){
-    planetDelete();
-  }
-
-  for (let i = 0; i < planetOptions.length; i++){
-    if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
-      tempPlanetSpecs.length = 0;
-      tempPlanetIndex = i;
-      tempPlanetSpecs.push(planets[i].r, planets[i].c);
-      spaceClicked = false;
-      moonMode = true;
-      solarSystemMode = false;
-    }
-    // if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY < planetOptions[i].pos.y){
-    //   pitches[i] *= 1.05948
-    //   oscillators[i].freq(pitches[i]);
-    // } else if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && mouseY > planetOptions[i].pos.y) {
-    //   pitches[i] *= 0.944
-    //   oscillators[i].freq(pitches[i]);
-    // }
-  }
-  if (solarSystemMode){
-    for (let t = 0; t < planets.length; t++){
-    //  if (dist(planets[t].pos.x, planets[t].pos.y)
-      if (dist(mouseX, mouseY, planets[t].pos.x, planets[t].pos.y) < planets[t].r){
-        xOffset = mouseX - planets[t].pos.x;
-        yOffset = mouseY - planets[t].pos.y;
-        tempPlanetIndex = t;
-        tempPlanetSpecs.length = 0;
-        tempPlanetSpecs.push(planets[t].r, planets[t].c, pitches[t]);
-        spaceClicked = false;
-        if (!dragging) {
-          setTimeout(timerDrag, 200);
-        }
-        dragging = false;
-      }
-    }
-  }
-
-  if (moonMode && dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*2){
-    moonMode = false;
-    solarSystemMode = true;
-    spaceClicked = false;
-    tempPlanetSpecs.length = 0;
-  }
-
-
-
-  if (spaceClicked && planetNumber < 8 && solarSystemMode) {
-    planetAdd();
-  }
-  if (spaceClicked && moonMode) {
-    moonAdd();
-  }
 }
-
-
-
-function timer() {
-  tempPlanet = true;
-}
-
-function timerDrag() {
-  if (dragging || mouseIsPressed) {
-    console.log('drag that');
-  } else {
-    console.log('moon mode baby!')
-    moonMode = true;
-    solarSystemMode = false;
-    spaceClicked = false;
-  }
-}
-
 function resetPlanet() {
 // push a new planet into the planets array, with the same specs as the one spliced
   planets.splice(tempPlanetIndex, 0, new Planet(1, 1, 1, tempPlanetSpecs[0], tempPlanetSpecs[1], gConst, e[tempPlanetIndex], mouseX - xOffset - width/2, mouseY - yOffset - height/2, angleNewPlanet));
