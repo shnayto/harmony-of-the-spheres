@@ -297,6 +297,7 @@ function touchStarted() {
   Tone.start();
     if (started == false) {
       started = true;
+      Tone.start;
     }
     console.log('silly?')
     planetOptionsHover();
@@ -503,7 +504,7 @@ function moonAdd() {
   let m = moonNumber;
   let rm = random(1, moonNumber);
   if (moons[tempPlanetIndex].length < 3){
-    moons[tempPlanetIndex].push(new Planet((2 * 0.2) + 1, (2 * 0.2) + 1, 1, planetRadii[2] * 2, [255, 224, 225], gConst, e[2]));
+    moons[tempPlanetIndex].push(new Planet((2 * 0.2) + 1, (2 * 0.2) + 1, 1, planetRadii[2] * 2, [175, 174, 175], gConst, e[2]));
   }
 }
 
