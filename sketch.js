@@ -56,6 +56,7 @@ function setup(){
   // lp = new p5.LowPass();
   // lp.freq(lpFreq);
   planetNumber = 0;
+  pixelDensity(1);
 //   for (i = 0; i < planetNumber; i++) {
 // // arguments:              x ,           y,             m, radius,         colour,        g,      eccentricty
 //   // planets.push(new Planet((i * 0.2) + 1, (i * 0.2) + 1, 1, planetRadii[i] * 2, planetColours[i], gConst, e[i]));
