@@ -13,7 +13,9 @@ let fixedPlanetIndices = [];
 //sounds
 //A major7      A6      E        A     Csharp    Gsharp E      A    A
 
-let pitches = [1760/2, 1318.5/2, 880/2, 554.4/2, 415.3, 329.6/2, 220/2, 55];
+//let pitches = [1760/2, 1318.5/2, 880/2, 554.4/2, 415.3/2, 329.6/2, 220/2, 55];
+let pitches = [220/2, 329.6/2, 415.3/2, 55, 554.4/2, 880/2, 1318.5/2, 1760/2];
+
 let fixedPitches = [1760/2, 1318.5/2, 880/2, 554.4/2, 415.3, 329.6/2, 220/2, 55];
 var audio;
 
@@ -24,6 +26,7 @@ let fixedPitches = [3321, 1300, 800, 425.2, 67.49, 27.16, 9.523, 4.855, 3.221];
 
 let playing = false, oscillators = [], frequencies = [], initalDistances = [], currentDistances = [], differenceDistances = [],
 soundLoop, intervalInSeconds = Infinity;
+let oscillatorsDetune = [];
 //maths
 let gConst = 0.01, tempPlanet = false, tempMoon = false, pulse = 0, angleNewPlanet;
 let currentPlanetPeriod, maxDistanceFromSun, minDistanceFromSun;
@@ -45,11 +48,15 @@ let spaceClicked = true;
 var fmOsc;
 var order;
 
-const harmonicityVal = [0.25, 0.5, 1, 2, 4, 8, 16];
-let harmonicityMap;
+const harmonicityVal = [0, 0.25, 0.5, 1, 2, 4, 8];
+let harmonicityMap = 0;
 let prevHarmonicityMap;
 let frequencyMap = 0;
-let modulationIndexMap = 10;
+let modulationIndexMap = 0;
+let filter;
+let filterFreq = 1500;
+let distortion;
+let distortionMap = 0;
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
@@ -86,22 +93,40 @@ function draw(){
   sun.show();
   startScreen();
 
-  prevHarmonicityMap = harmonicityMap;
+
 // for (var i = 0  ;  i < touches.length  ;  i++) {
 //    modulationIndexMap = map(touches[0].x, 0, width, 0.02, 20);
 //    frequencyMap = map(touches[0].y, 0, height, -2, 2);
 // }
+
+  if (moons[tempPlanetIndex].length > 2){
+    console.log('something')
+    // let distortionDistance = dist(moons[0][2].pos.x, moons[0][2].pos.y, sun.pos.x, sun.pos.y);
+    // distortionMap = map(distortionDistance, 0, width/2, 0, 1);
+    }
   if (moons[tempPlanetIndex].length > 0){
-    modulationIndexMap = map(moons[0][0].pos.x, 0, width, 0.02, 20);
-    frequencyMap = map(moons[0][0].pos.y, 0, height, -2, 2);
-  }
+    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
+    modulationIndexMap = map(modDistance, 0, width/2, 0.02, 4);
+    }
+  if (moons[tempPlanetIndex].length > 1){
+    let detuneDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
+    frequencyMap = map(detuneDistance, 0, width/2, -10, 10);
+    }
   if (tempMoon){
-    modulationIndexMap = map(mouseX, 0, width, 0.02, 20);
+    // let modDistance = dist(mouseX, mouseY, sun.pos.x, sun.pos.y);
+    // modulationIndexMap = map(modDistance, 0, width/2, 0.02, 4);
+    // let detuneDistance = dist(mouseX, mouseY, sun.pos.x, sun.pos.y);
+    // frequencyMap = map(detuneDistance, 0, width/2, -20, 20);
   }
 
-  if (oscillators.length > 0) {
-    oscillators[0].modulationIndex.value = modulationIndexMap;
+
+  if (moons[tempPlanetIndex].length > 0) {
+    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+    oscillators[tempPlanetIndex].frequency.value = pitches[tempPlanetIndex];
+    oscillatorsDetune[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+    oscillatorsDetune[tempPlanetIndex].frequency.value = pitches[tempPlanetIndex] + frequencyMap;
   }
+
 //display planets, sun, radius lines & apply gravity
   for (i = 0; i < planetOptions.length; i++) {
     planetOptions[i].showOptions();
@@ -117,7 +142,6 @@ function draw(){
      }
      if (tempMoon == true) {
        createTempMoon();
-       console.log('temp')
      }
   }
   if (solarSystemMode){
@@ -125,14 +149,14 @@ function draw(){
       planets[i].show();
       planets[i].move();
       sun.attract(planets[i]);
-    if (moons[tempPlanetIndex].length > 0){
-      for (i = 0; i < moons[tempPlanetIndex].length; i++) {
+    }
+    if (moons[0].length > 0){
+      for (i = 0; i < moons[0].length; i++) {
       //  moons[tempPlanetIndex][i].show();
-          moons[tempPlanetIndex][i].move();
-        //sun.attract(moons[tempPlanetIndex][i]);
+        moons[0][i].move();
+        sun.attract(moons[0][i]);
       }
     }
-  }
   // create a new temporary planet when one is selected
     if (tempPlanet == true) {
       createTempPlanet();
@@ -246,6 +270,10 @@ function returnToSolarSystemMode() {
     moonMode = false;
     solarSystemMode = true;
     spaceClicked = false;
+    for (i = 0; i < oscillators.length; i++) {
+      oscillators[i].volume.rampTo(-60, 0.5);
+      oscillatorsDetune[i].volume.rampTo(-60, 0.5)
+    }
     //tempPlanetSpecs.length = 0;
   }
 }
@@ -289,6 +317,13 @@ function planetOptionsHover() {
       spaceClicked = false;
       moonMode = true;
       solarSystemMode = false;
+      for (i = 0; i < oscillators.length; i++) {
+        oscillators[i].volume.rampTo(-60, 0.5);
+        oscillatorsDetune[i].volume.rampTo(-60, 0.5);
+        oscillators[tempPlanetIndex].volume.rampTo(-40, 0.5);
+        oscillatorsDetune[tempPlanetIndex].volume.rampTo(-40, 0.5);
+
+      }
     }
   }
 }
@@ -338,7 +373,8 @@ function planetDelete() {
   //!! STORE DELETED SPECS TO AVOID REPEATS
   tempPlanet = false;
   planetNumber--;
-  oscillators[planetNumber].stop();
+  oscillators[tempPlanetIndex].stop();
+  oscillatorsDetune[tempPlanetIndex].stop();
   planetOptions.splice(tempPlanetIndex, 1);
   for (let i = 0; i < planetOptions.length; i++) {
     planetOptions[i].pos.x = width / 20;
@@ -365,7 +401,9 @@ function planetAdd() {
 if (d == 0 || sorted == false || deletedIndices.length > 0){
     fixedPlanetIndices.push(deletedIndices[0] + 1);
     fixedPlanetIndices.sort();
-    planets.splice(d, 0, new Planet((d * 0.2) + 1, (d * 0.2) + 1, 1, planetRadii[d] * 2, planetColours[d], gConst, e[d]));
+  //  planets.splice(d, 0, new Planet((d * 0.2) + 1, (d * 0.2) + 1, 1, planetRadii[d] * 2, planetColours[d], gConst, e[d]));
+    tempPlanetAngle();
+    planets.splice(d, 0, new Planet(1, 1, 1, planetRadii[d] * 2, planetColours[d], gConst, e[d], mouseX - width/2, mouseY - height/2, angleNewPlanet));
     planetOptions.splice(d, 0, new Planet(1, 1, 1, height/16, planetColours[d], gConst, e - i, width / 20 - width / 2, i * height/d - height / 2 + height / (d*2) + 1));
     deletedIndices.splice(0, 1);
     sorted = true;
@@ -378,22 +416,33 @@ if (d == 0 || sorted == false || deletedIndices.length > 0){
     fixedPlanetIndices.push(maxPlanetNumber);
   }
   planetNumber++;
-
+  console.log(pitches[p])
   fmOsc = new Tone.FMOscillator({
     frequency: pitches[p],
     type: "sine",
-    partialCount: 0,
-    modulationType: "sine",
-    harmonicity: 0.2,
-		modulationIndex: 0,
-    volume: -40
+    partialCount: 50,
+    harmonicity: 1,
+    modulationType: "square",
+    volume: -50
   }).toDestination();
 
+  fmOsc2 = new Tone.FMOscillator({
+    frequency: pitches[p],
+    type: "sine",
+    partialCount: 50,
+    harmonicity: 0,
+    modulationType: "square",
+    volume: -50
+  }).toDestination();
+
+//  freeverb.dampening = 1000;
+  // routing synth through the reverb
+
   oscillators.push(fmOsc);
+  oscillatorsDetune.push(fmOsc2);
   oscillators[p].start();
-  // oscillators.push(new p5.Oscillator('sine'));
-  // oscillators[p].freq(pitches[p]);
-  // oscillators[p].start();
+  oscillatorsDetune[p].start();
+
    for (let i = 0; i < planetOptions.length; i++) {
     // oscillators[i].amp(0.2/8);
      planetOptions[i].pos.x = width / 20;
