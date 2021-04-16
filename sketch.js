@@ -15,7 +15,7 @@ let fixedPlanetIndices = [];
 //A major7      A6      E        A     Csharp    Gsharp E      A    A
 
 //let pitches = [1760/2, 1318.5/2, 880/2, 554.4/2, 415.3/2, 329.6/2, 220/2, 55];
-let pitches = [220/2, 329.6/2, 415.3/2, 554.4/2, 880/2, 1318.5/2, 1760/2, 55];
+var pitches = [220/2, 329.6/2, 415.3/2, 554.4/2, 880/2, 1318.5/2, 1760/2, 55];
 
 let fixedPitches = [1760/2, 1318.5/2, 880/2, 554.4/2, 415.3, 329.6/2, 220/2, 55];
 var audio;
@@ -61,12 +61,13 @@ let distortion;
 let distortionMap = 0;
 let tempMoonIndex;
 let diff = [];
+let eccentricityNewPlanet;
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
   planetNumber = -1;
   pixelDensity(1);
-  sun = new Sun(width/2, height/2, 33000, gConst);
+  sun = new Sun(width/2, height/2);
 }
 
 function startScreen() {
@@ -108,7 +109,8 @@ function draw(){
     }
   if (moons[tempPlanetIndex].length > 0){
     let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, width/2, 0.02, 4);
+    modulationIndexMap = map(modDistance, 0, width/2, -1, 4);
+    console.log(modulationIndexMap)
     }
   if (moons[tempPlanetIndex].length > 1){
     let detuneDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
@@ -349,13 +351,20 @@ function resetPlanet() {
 // push a new planet into the planets array, with the same specs as the one spliced
   tempPlanet = false;
   dragging = false;
-  planets.splice(tempPlanetIndex, 0, new Planet(1, 1, 1, tempPlanetSpecs[0], tempPlanetSpecs[1], gConst, e[tempPlanetIndex], mouseX - xOffset - width/2, mouseY - yOffset - height/2, angleNewPlanet, tempPlanetNumber));
-  console.log(tempPlanetIndex)
+  tempPlanetAngle();
+  tempPlanetEccentricity();
+  console.log(eccentricityNewPlanet);
+  console.log(angleNewPlanet);
+
+  planets.splice(tempPlanetIndex, 0, new Planet(mouseX - xOffset, mouseY - yOffset, tempPlanetSpecs[0], tempPlanetSpecs[1], eccentricityNewPlanet, angleNewPlanet, tempPlanetNumber));
   //tempPlanetSpecs.length = 0;
 }
 function resetMoon() {
   tempMoon = false;
-  moons[tempPlanetIndex].push(new Planet(1, 1, 1, planetRadii[2] * 2, moonColours, gConst, e[tempPlanetIndex], mouseX - xOffset - width/2, mouseY - yOffset - height/2, angleNewPlanet));
+  tempPlanetAngle();
+  tempPlanetEccentricity();
+                            //                                mouseX - width/2, mouseY - height/2, 1, planetRadii[2] * 2, moonColours, gConst, 1, 1, eccentricityNewPlanet, angleNewPlanet
+  moons[tempPlanetIndex].push(new Planet(mouseX - xOffset, mouseY - yOffset, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
   console.log('reset')
 }
 function planetDelete() {
@@ -421,7 +430,6 @@ function planetAdd() {
   fmOsc = new Tone.FMOscillator({
     frequency: pitches[p],
     type: "sine",
-    partialCount: 50,
     harmonicity: 1,
     modulationIndex: 0,
     modulationType: "square",
@@ -431,8 +439,7 @@ function planetAdd() {
   fmOsc2 = new Tone.FMOscillator({
     frequency: pitches[p],
     type: "sine",
-    partialCount: 50,
-    harmonicity: 0,
+    harmonicity: 1,
     modulationIndex: 0,
     modulationType: "square",
     volume: -25
@@ -443,18 +450,28 @@ function planetAdd() {
   // REORGANISE THIS CODE SO THAT P || D CAN BE USED ON THE SAME CODE
   if (diff.length == 0){
     tempPlanetAngle();
-    planets.push(new Planet(1, 1, 1, planetRadii[p] * 2, planetColours[p], gConst, e[p],  mouseX - width/2, mouseY - height/2, angleNewPlanet, p));
-    planetOptions.push(new Planet(1, 1, 1, height/16, planetColours[p], gConst, e - p, width / 20 - width / 2, p * height/p - height / 2 + height / (p*2) + 1));
-    oscillators.push(fmOsc);
-    oscillatorsDetune.push(fmOsc2);
-    oscillators[p].start();
-    oscillatorsDetune[p].start();
+    tempPlanetEccentricity();
+    // new model
+    if (dist(width/2, height/2, mouseX, mouseY) < height/2) {
+      console.log(eccentricityNewPlanet);
+
+      planets.push(new Planet(mouseX, mouseY, planetRadii[p] * 2, planetColours[p], eccentricityNewPlanet, angleNewPlanet, p));
+      planetOptions.push(new Planet(width / 20 - width / 2, p * height/p - height / 2 + height / (p*2) + 1, height/16, planetColours[p]));
+      oscillators.push(fmOsc);
+      oscillatorsDetune.push(fmOsc2);
+      oscillators[p].start();
+      oscillatorsDetune[p].start();
+    } else {
+      console.log("outOfBounds!")
+      spaceClicked = false;
+    }
   } else {
     oscillators[d].volume.rampTo(-25, 0.05);
     oscillatorsDetune[d].volume.rampTo(-25, 0.05);
     tempPlanetAngle();
-    planets.splice(d, 0, new Planet(1, 1, 1, planetRadii[d] * 2, planetColours[d], gConst, e[d], mouseX - width/2, mouseY - height/2, angleNewPlanet, d));
-    planetOptions.splice(d, 0, new Planet(1, 1, 1, height/16, planetColours[d], gConst, e - i, width / 20 - width / 2, i * height/d - height / 2 + height / (d*2) + 1));
+    tempPlanetEccentricity();
+    planets.splice(d, 0, new Planet(mouseX, mouseY, planetRadii[d] * 2, planetColours[d], eccentricityNewPlanet, angleNewPlanet, d));
+    planetOptions.splice(d, 0, new Planet(width / 20 - width / 2, i * height/d - height / 2 + height / (d*2) + 1, height/16, planetColours[d]));
     diff.splice(0, 1);
 
     }
@@ -475,14 +492,15 @@ function moonAdd() {
   let moonNumber = moons.length;
   let m = moonNumber;
   let rm = random(1, moonNumber);
+  tempPlanetAngle();
+  tempPlanetEccentricity();
   if (moons[tempPlanetIndex].length < 3){
-    moons[tempPlanetIndex].push(new Planet((2 * 0.2) + 1, (2 * 0.2) + 1, 1, planetRadii[2] * 2, moonColours, gConst, e[2]));
+    moons[tempPlanetIndex].push(new Planet(mouseX, mouseY, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
   }
 }
 
 function createTempPlanet(){
   tempPlanetPulse();
-  tempPlanetAngle();
   tempLowPassFall();
 }
 
@@ -514,6 +532,7 @@ function tempPlanetPulse() {
 }
 
 function tempPlanetAngle(){
+  translate(width/2, height/2);
   let v2 = createVector(width/2, 0);
   let v1 = createVector(mouseX - width/2, mouseY - height/2);
   let angleBetween = v1.angleBetween(v2);
@@ -522,12 +541,59 @@ function tempPlanetAngle(){
   } else {angleNewPlanet = angleBetween};
 }
 
+function tempPlanetEccentricity() {
+  let d = dist(width/2, height/2, mouseX, mouseY);
+  let dSq = Math.sqrt(d);
+  eccentricityNewPlanet = map(dSq, 0, height/2, 2.3, -25);
+}
+
+class Planet {
+
+  constructor(x, y, r, c, e, a, n){
+    //set X and Y coordinates on unit circle accordingly
+    this.velX = cos(a);
+    this.velY = sin(a);
+    // set coordinates to planet pos
+    this.pos = createVector(x, y);
+    // set initial ang velocity based on initial angle
+    this.vel = createVector(e * this.velY, e * this.velX);
+    this.acc = createVector(0, 0);
+    this.mass = 1;
+    this.r = r;
+    this.c = c;
+    this.optionAlpha = 50;
+    this.number = n;
+  }
+
+  applyForce(force) {
+    let f = p5.Vector.div(force, this.mass);
+    this.acc = f;
+  }
+
+  move(){
+    this.vel.add(this.acc);
+    this.pos.add(this.vel);
+  }
+
+  show(){
+    noStroke();
+    fill(this.c[0], this.c[1], this.c[2], 200)
+    ellipse(this.pos.x, this.pos.y, this.r);
+  }
+
+  showOptions(){
+    noStroke();
+    fill(this.c[0], this.c[1], this.c[2], this.optionAlpha)
+    ellipse(this.pos.x, this.pos.y, this.r);
+  }
+}
+
 class Sun {
-   constructor(x, y, m, g) {
+   constructor(x, y) {
      this.pos = createVector(x, y);
-     this.mass = m;
-     this.r = sqrt(this.mass) / 6;
-     this.g = g
+     this.mass = 330;
+     this.r = this.mass / 10;
+     this.g = 1;
    }
 
    show() {
@@ -544,49 +610,3 @@ class Sun {
      planet.applyForce(force);
      }
 }
-class Planet {
-
-  constructor(x, y, m, r, c, g, e, mX, mY, a, n){
-    //creates a random angle within unit circle
-    let randomAngle = random(TWO_PI);
-    //set X and Y coordinates on unit circle accordingly
-    this.randAngleX = cos(a) || cos(randomAngle);
-    this.initialX = mX || this.randAngleX * 140;
-    this.randAngleY = - sin(a) || sin(randomAngle);
-    this.initialY = mY || this.randAngleY * 140;
-    // set coordinates to planet pos
-    this.pos = createVector(width/2 +(this.initialX * x), height/2 + (this.initialY * y));
-    // set initial ang velocity based on initial angle
-    this.vel = createVector(sqrt(g) * e * -this.randAngleY, sqrt(g) * e * this.randAngleX);
-    this.acc = createVector(0, 0);
-    this.mass = m;
-    this.r = r;
-    this.c = c;
-    this.optionAlpha = 50;
-    this.number = n;
-  }
-
-  applyForce(force) {
-    let f = p5.Vector.div(force, this.mass);
-    this.acc.add(f);
-  }
-
-  move(){
-    this.vel.add(this.acc);
-    this.pos.add(this.vel);
-    this.acc.set(0, 0);
-  }
-
-  show(){
-    noStroke();
-    fill(this.c[0], this.c[1], this.c[2], 200)
-    ellipse(this.pos.x, this.pos.y, this.r);
-  }
-
-  showOptions(){
-    noStroke();
-    fill(this.c[0], this.c[1], this.c[2], this.optionAlpha)
-    ellipse(this.pos.x, this.pos.y, this.r);
-  }
-}
-
