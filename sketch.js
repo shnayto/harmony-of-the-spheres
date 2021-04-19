@@ -59,15 +59,20 @@ let filter;
 let filterFreq = 1500;
 let distortion;
 let distortionMap = 0;
+let tremoloMap = 0;
 let tempMoonIndex;
 let diff = [];
 let eccentricityNewPlanet;
+let tremolo;
+let pan;
+let panMap = 0;
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
   planetNumber = -1;
   pixelDensity(1);
   sun = new Sun(width/2, height/2);
+  console.log(width, height);
 }
 
 function startScreen() {
@@ -103,18 +108,17 @@ function draw(){
 // }
 
   if (moons[tempPlanetIndex].length > 2){
-    console.log('something')
-    // let distortionDistance = dist(moons[0][2].pos.x, moons[0][2].pos.y, sun.pos.x, sun.pos.y);
-    // distortionMap = map(distortionDistance, 0, width/2, 0, 1);
+    let tremoloDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
+    tremoloMap = map(tremoloDistance, 0, width/2, 0, 1)
     }
   if (moons[tempPlanetIndex].length > 0){
-    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, width/2, -1, 4);
-    console.log(modulationIndexMap)
+    let panDistance = moons[tempPlanetIndex][0].pos.x;
+    panMap = map(panDistance, 0, width, -1, 1);
     }
   if (moons[tempPlanetIndex].length > 1){
-    let detuneDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
-    frequencyMap = map(detuneDistance, 0, width/2, -10, 10);
+    let modDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
+    modulationIndexMap = map(modDistance, 0, width/2, -1, 4);
+
     }
   if (tempMoon){
     // let modDistance = dist(mouseX, mouseY, sun.pos.x, sun.pos.y);
@@ -125,10 +129,12 @@ function draw(){
 
 
   if (moons[tempPlanetIndex].length > 0) {
-    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
-    oscillators[tempPlanetIndex].frequency.value = pitches[tempPlanetIndex];
-    oscillatorsDetune[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
-    oscillatorsDetune[tempPlanetIndex].frequency.value = pitches[tempPlanetIndex] + frequencyMap;
+    //oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+    pan.pan.value = panMap;
+    tremolo.depth.value = tremoloMap;
+    console.log(tremolo.depth.value);
+
+    //oscillatorsDetune[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
   }
 
 //display planets, sun, radius lines & apply gravity
@@ -445,6 +451,10 @@ function planetAdd() {
     volume: -25
   }).toDestination();
 
+  pan = new Tone.Panner(1).toDestination();
+
+  tremolo = new Tone.Tremolo(5, 1).toDestination().start();
+
 
   //let d = 1;
   // REORGANISE THIS CODE SO THAT P || D CAN BE USED ON THE SAME CODE
@@ -453,14 +463,14 @@ function planetAdd() {
     tempPlanetEccentricity();
     // new model
     if (dist(width/2, height/2, mouseX, mouseY) < height/2) {
-      console.log(eccentricityNewPlanet);
 
       planets.push(new Planet(mouseX, mouseY, planetRadii[p] * 2, planetColours[p], eccentricityNewPlanet, angleNewPlanet, p));
       planetOptions.push(new Planet(width / 20 - width / 2, p * height/p - height / 2 + height / (p*2) + 1, height/16, planetColours[p]));
       oscillators.push(fmOsc);
       oscillatorsDetune.push(fmOsc2);
-      oscillators[p].start();
-      oscillatorsDetune[p].start();
+      oscillators[p].connect(pan).start();
+      oscillatorsDetune[p].connect(pan).start();
+
     } else {
       console.log("outOfBounds!")
       spaceClicked = false;
@@ -542,21 +552,29 @@ function tempPlanetAngle(){
 }
 
 function tempPlanetEccentricity() {
-  let d = dist(width/2, height/2, mouseX, mouseY);
-  let dSq = Math.sqrt(d);
-  eccentricityNewPlanet = map(dSq, 0, height/2, 2.3, -25);
+  // let d = dist(width/2, height/2, mouseX, mouseY);
+  // let dSr = Math.sqrt(d);
+  // eccentricityNewPlanet = map(dSr, height/2, 0, height/2, 0);
+  // eccentricityNewPlanet = map(eccentricityNewPlanet, 0, height/2, 3, -40);
+  // console.log(eccentricityNewPlanet)
+  //eccentricityNewPlanet = map(dSq, 0, height/2, height/331.3, -(height/30.48));
+  //translate(width/2, height/2);
+  let v1 = dist(width/2, height/2, mouseX, mouseY);
+  v1 = Math.sqrt(v1);
+  eccentricityNewPlanet = map(v1, 0, height/2, 2, -20)
+  console.log(eccentricityNewPlanet);
 }
 
 class Planet {
 
   constructor(x, y, r, c, e, a, n){
     //set X and Y coordinates on unit circle accordingly
-    this.velX = cos(a);
-    this.velY = sin(a);
+    this.velY = cos(a);
+    this.velX = sin(a);
     // set coordinates to planet pos
     this.pos = createVector(x, y);
     // set initial ang velocity based on initial angle
-    this.vel = createVector(e * this.velY, e * this.velX);
+    this.vel = createVector(e * this.velX, e * this.velY);
     this.acc = createVector(0, 0);
     this.mass = 1;
     this.r = r;
@@ -592,7 +610,7 @@ class Sun {
    constructor(x, y) {
      this.pos = createVector(x, y);
      this.mass = 330;
-     this.r = this.mass / 10;
+     this.r = this.mass / 9;
      this.g = 1;
    }
 
@@ -610,3 +628,4 @@ class Sun {
      planet.applyForce(force);
      }
 }
+
