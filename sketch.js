@@ -39,7 +39,7 @@ let hpFreq = 20000;
 let maxPlanetNumber = 0;
 let amp = 0.2/8;
 let xOffset, yOffset;
-let moonMode = false, solarSystemMode = true;
+let moonMode = false, solarSystemMode = false;
 let started = false;
 let breakMe = false;
 let fade = 155;
@@ -68,6 +68,9 @@ let pan;
 let panMap = 0;
 let panners = [];
 let tremolos = [];
+  let volDistance = [];
+  let volMap = [];
+  let stars = [];
 
 function preload() {
   bin = loadImage('bin.png');
@@ -75,9 +78,11 @@ function preload() {
 function setup(){
   createCanvas(windowWidth, windowHeight);
   planetNumber = -1;
-  pixelDensity(1);
+//  pixelDensity(1);
   sun = new Sun(width/2, height/2);
-  console.log(width, height);
+  for (let i = 0; i < width/30; i++) {
+    stars[i] = new Star(random(0, width), random(0, height), random(0.5, 1.5));
+  }
 }
 
 function startScreen() {
@@ -100,93 +105,145 @@ function graphics(){
   fill(250, fade);
   textSize(width/35);
   textAlign(CENTER, CENTER);
-  welcomeText = text("Touch to Begin", width/2, height/2);
+  textFont('Georgia')
+  welcomeText = text("Touch to Begin", width/2, height/2.5);
+  textSize(width/15)
+  titleText = text("Harmony of the Spheres", width/2, height/4)
 }
 
 function draw(){
   background(45, 35, 35);
-  sun.show();
   startScreen();
-// for (var i = 0  ;  i < touches.length  ;  i++) {
-//    modulationIndexMap = map(touches[0].x, 0, width, 0.02, 20);
-//    frequencyMap = map(touches[0].y, 0, height, -2, 2);
-// }
-
-  if (moons[tempPlanetIndex].length > 2){
-    let tremoloDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
-    tremoloMap = map(tremoloDistance, 0, width/2, 0, 1)
-    }
-  if (moons[tempPlanetIndex].length > 1){
-    let panDistance = moons[tempPlanetIndex][1].pos.x;
-    panMap = map(panDistance, 0, width, -1, 1);
-    }
-  if (moons[tempPlanetIndex].length > 0){
-    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, width/2, -1, 4);
-
-    }
-  if (tempMoon){
-    // let modDistance = dist(mouseX, mouseY, sun.pos.x, sun.pos.y);
-    // modulationIndexMap = map(modDistance, 0, width/2, 0.02, 4);
-    // let detuneDistance = dist(mouseX, mouseY, sun.pos.x, sun.pos.y);
-    // frequencyMap = map(detuneDistance, 0, width/2, -20, 20);
+  //show sun + stars
+  for (let i = 0; i < stars.length; i++) {
+    stars[i].show();
   }
-
-
-  if (moons[tempPlanetIndex].length > 0) {
-    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
-    pan.pan.value = panMap;
-    tremolos[tempPlanetIndex].depth.value = tremoloMap;
-    console.log(tremolo.depth.value);
-
-    //oscillatorsDetune[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+  sun.show();
+// if we're in solar system mode
+  if (solarSystemMode){
+    solarSystemDraw();
   }
-
-//display planets, sun, radius lines & apply gravity
+// if we're in moon mode
+  if (moonMode) {
+    moonModeDraw();
+  }
+// sound synthesis + effects control
+  timbralProperties();
+// show left hand planets menu
   for (i = 0; i < planetOptions.length; i++) {
     planetOptions[i].showOptions();
     options();
   }
-  if (moonMode) {
-    fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2]);
-    ellipse(sun.pos.x, sun.pos.y, sun.r*2);
-     for (i = 0; i < moons[tempPlanetIndex].length; i++) {
-         moons[tempPlanetIndex][i].show();
-         moons[tempPlanetIndex][i].move();
-         sun.attract(moons[tempPlanetIndex][i]);
-     }
-     if (tempMoon == true) {
-       createTempMoon();
-     }
-  }
-  if (solarSystemMode){
-    for (i = 0; i < planets.length; i++) {
-      planets[i].show();
-      planets[i].move();
-      sun.attract(planets[i]);
-    }
-    if (moons[0].length > 0){
-      for (i = 0; i < moons[0].length; i++) {
-      //  moons[tempPlanetIndex][i].show();
-        moons[0][i].move();
-        sun.attract(moons[0][i]);
+
+  for (let t = 0; t < planets.length; t++){
+    for(let i = 1; i < planets.length - 1; i++){
+      //console.log(i);
+
+      if (dist(planets[t].pos.x, planets[t].pos.y, planets[i].pos.x, planets[i].pos.y) < (planets[t].r + planets[i].r)){
+        //console.log('overlap');
       }
-    }
-  // create a new temporary planet when one is selected
-    if (tempPlanet == true) {
-      createTempPlanet();
-      showBin();
+     // if (dist(mouseX, mouseY, planets[t].pos.x, planets[t].pos.y) < planets[t].r){
+     //   if (!tempPlanet){
+     //     planets.splice(t, 1);
+     //     timer();
+     //  }
     }
   }
 }
 
+function timbralProperties() {
+  //map tremolo to second moon
+  if (moons[tempPlanetIndex].length > 1){
+    let tremoloDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
+    tremoloMap = map(tremoloDistance, 0, width/2, 0, 1)
+    }
+  //map chorus to third moon
+  if (moons[tempPlanetIndex].length > 2){
+    let panDistance = moons[tempPlanetIndex][2].pos.x;
+    panMap = map(panDistance, 0, width, 0, 1);
+    }
+  //map modulation index to first moon
+  if (moons[tempPlanetIndex].length > 0){
+    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
+    modulationIndexMap = map(modDistance, 0, width/2, -1, 4);
+  }
+  //assign mappings to values
+  if (moons[tempPlanetIndex].length > 0) {
+    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+    panners[tempPlanetIndex].feedback.value = panMap;
+    panners[tempPlanetIndex].depth = panMap;
+    tremolos[tempPlanetIndex].depth.value = tremoloMap;
+  }
+}
+
+function solarSystemDraw() {
+  textSize(width/50)
+  fill(255, 150);
+  text("Solar System", width/2, 30);
+//move, show and apply gravitational force to planets
+  for (let i = 0; i < planets.length; i++) {
+    planets[i].show();
+    planets[i].move();
+    sun.attract(planets[i]);
+    //console.log(freq);
+
+  }
+  //freqModBodge();
+  //move + apply gravitational force to moons, but don't show . . .
+  //this keeps the moons moving behind the scenes
+  //moving moons means moving timbre!
+  if (moons.length > 0){
+    for (j = 0; j < moons.length; j++){
+      if (moons[j].length > 0){
+        for (i = 0; i < moons[j].length; i++) {
+          moons[j][i].move();
+          sun.attract(moons[j][i]);
+        }
+      }
+    }
+  }
+// create a temporary planet to replace existing one
+  if (tempPlanet == true) {
+    createTempPlanet();
+  }
+}
+
+function freqModBodge() {
+    for (let i = 0; i < planets.length; i++) {
+      let distances = [];
+      distances[i] = (dist(planets[i].pos.x, planets[i].pos.y, width/2, height/2));
+
+      distMap = map(distances[i], 0, width/2, -20, 20);
+      //console.log(distMap);
+      let freq = pitches[i];
+      freq = freq + distMap;
+      oscillators[i].frequency.value = freq
+      console.log(distMap);
+    }
+}
+
+function moonModeDraw() {
+  text("Moon Mode", width/2, 30);
+  //replace sun with selected planet
+  fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2]);
+  ellipse(sun.pos.x, sun.pos.y, sun.r*2);
+  //move, show and apply gravitational force to moons
+   for (i = 0; i < moons[tempPlanetIndex].length; i++) {
+       moons[tempPlanetIndex][i].show();
+       moons[tempPlanetIndex][i].move();
+       sun.attract(moons[tempPlanetIndex][i]);
+   }
+// create a temporary moon to replace existing one
+   if (tempMoon == true) {
+     createTempMoon();
+   }
+}
+
 function options() {
-  let optionsTrigger;
+  //applies alpha to planets menu if hovering when using mouse
   for (let i = 0; i < planetOptions.length; i++){
     if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
       planetOptions[i].optionAlpha = 150;
-//width / 20 - width / 2, i * height/8 - height / 2 + height / 16)
-      //text(pitches[i].toFixed(1) + ' Hz', planetOptions[i].pos.x + 30, planetOptions[i].pos.y);
     } else if (moonMode) {
       planetOptions[tempPlanetIndex].optionAlpha = 150;
       planetOptions[i].optionAlpha = 50;
@@ -197,17 +254,18 @@ function options() {
 }
 
 function mouseDragged(){
+// delete dragged planet, replace with temporary one
   if (solarSystemMode && dragging == true){
-    for (let t = 0; t < planets.length; t++){
-       if (dist(mouseX, mouseY, planets[t].pos.x, planets[t].pos.y) < planets[t].r){
-         if (!tempPlanet){
-           planets.splice(t, 1);
-           //tempPlanetIndex = t;
+    for (let i = 0; i < planets.length; i++){
+      if (dist(mouseX, mouseY, planets[i].pos.x, planets[i].pos.y) < planets[i].r){
+        if (!tempMoon){
+          planets.splice(i, 1);
+          setTimeout(timer, 10);
         }
-        setTimeout(timer, 10);
       }
     }
   }
+// delete dragged moon, replace with temporary one
   if (moonMode){
     for (let i = 0; i < moons[tempPlanetIndex].length; i++){
       if (dist(mouseX, mouseY, moons[tempPlanetIndex][i].pos.x, moons[tempPlanetIndex][i].pos.y) < moons[tempPlanetIndex][i].r){
@@ -220,23 +278,37 @@ function mouseDragged(){
   }
 }
 
-function touchStarted() {
-  Tone.start();
-    if (started == false) {
-      started = true;
-      Tone.start;
-    }
+function timer() {
+  if (solarSystemMode) {
+    tempPlanet = true;
+  } else {
+    tempMoon = true;
+  }
+}
 
+function touchStarted() {
+//begin interface with touch
+  //Tone.start();
+    if (started == false) {
+    //Tone.js doesn't always begin first time round (particularly ...
+    // ... on touch devices) so, it is started for a second time
+      started = true;
+      Tone.start();
+      solarSystemMode = true;
+    }
+// if a planet on the left menu is clicked
     planetOptionsClick();
+// if a planet is clicked
     planetClick();
+// if a moon is clicked
     moonClick();
-    if (spaceClicked && planetNumber < 8 && solarSystemMode) {
+// if a random space is touched, add planet or moon
+    if (spaceClicked && planets.length < 8 && solarSystemMode) {
       planetAdd();
     }
     if (spaceClicked && moonMode) {
       moonAdd();
     }
-    spaceClicked = true;
     return false;
 }
 
@@ -250,13 +322,6 @@ function touchEnded() {
   }
 }
 
-function timer() {
-  if (solarSystemMode) {
-    tempPlanet = true;
-  } else {
-    tempMoon = true;
-  }
-}
 
 function timerDrag() {
   if (dragging || mouseIsPressed) {
@@ -330,35 +395,27 @@ function planetOptionsClick() {
       //maybe delete
       panMap = 0;
       tremoloMap = 0;
-      // for (i = 0; i < oscillators.length; i++) {
-      //   oscillators[i].volume.rampTo(-50, 0.5);
-      //   oscillatorsDetune[i].volume.rampTo(-50, 0.5);
-        // oscillators[tempPlanetIndex].volume.rampTo(-20, 0.5);
-        // oscillatorsDetune[tempPlanetIndex].volume.rampTo(-20, 0.5);
-      // }
     }
   }
 }
+
 function planetReleased() {
   if (tempPlanet == true && mouseY > height - height/10) {
       planetDelete();
       tempPlanetSpecs.length = 0;
-      spaceClicked = false;
-      //PROBLEM CHILD !!!!!!!!
   } else if (tempPlanet == true) {
       resetPlanet();
-      spaceClicked = false;
   }
+  spaceClicked = false;
 }
 
 function moonReleased() {
   if (tempMoon == true && mouseY > height - height/10) {
       moonDelete();
-      spaceClicked = false;
   } else if (tempMoon) {
       resetMoon();
-      spaceClicked = false;
   }
+  spaceClicked = false;
 }
 
 function resetPlanet() {
@@ -367,39 +424,45 @@ function resetPlanet() {
   dragging = false;
   tempPlanetAngle();
   tempPlanetEccentricity();
-  console.log(eccentricityNewPlanet);
-  console.log(angleNewPlanet);
-
   planets.splice(tempPlanetIndex, 0, new Planet(mouseX - xOffset, mouseY - yOffset, tempPlanetSpecs[0], tempPlanetSpecs[1], eccentricityNewPlanet, angleNewPlanet, tempPlanetNumber));
-  //tempPlanetSpecs.length = 0;
 }
+
 function resetMoon() {
   tempMoon = false;
   tempPlanetAngle();
   tempPlanetEccentricity();
-                            //                                mouseX - width/2, mouseY - height/2, 1, planetRadii[2] * 2, moonColours, gConst, 1, 1, eccentricityNewPlanet, angleNewPlanet
   moons[tempPlanetIndex].push(new Planet(mouseX - xOffset, mouseY - yOffset, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
-  console.log('reset')
 }
+
 function planetDelete() {
-  //!! STORE DELETED SPECS TO AVOID REPEATS
   tempPlanet = false;
   planetNumber--;
+// this checks the fixed planet order
+// i.e if you delete random planets, they'll get readded in the original order
+  planetOrderLogger();
+// ensure other planets are at -25dB
+  for (var i = 0; i < planets.length; i++) {
+      oscillators[planets[i].number].volume.rampTo(-25, 0.05);
+  }
+// mute the deleted planet's oscillator
+  for (let i = 0; i < diff.length; i++){
+      console.log(diff[i])
+    oscillators[diff[i]].volume.rampTo(-100, 0.05);
+  }
+// rearrange planet menu on left
+  planetOptions.splice(tempPlanetIndex, 1);
+  planetOptionsOrganize();
+}
 
-// this checks the fixed planet order, with the current
-// if you delete some random planets, they'll get readded in the original order
+function planetOrderLogger() {
   let fixedPlanetNumbers = []
   for (let i = 0; i < planets.length; i++){
     fixedPlanetNumbers.push(planets[i].number)
   }
-  console.log(fixedPlanetNumbers);
-
   var a = []
-
   for (var i = 0; i < fixedPlanetNumbers.length; i++) {
       a[fixedPlanetNumbers[i]] = true;
   }
-
   for (var i = 0; i < fixedPlanetIndices.length; i++) {
       if (a[fixedPlanetIndices[i]]) {
           delete a[fixedPlanetIndices[i]];
@@ -407,44 +470,70 @@ function planetDelete() {
           a[fixedPlanetIndices[i]] = true;
       }
   }
-
   diff.length = 0;
   for (var i in a) {
       diff.push(i);
   }
-
-  for (var i = 0; i < planets.length; i++) {
-      oscillators[planets[i].number].volume.rampTo(-25, 0.05);
-  }
-
-  for (let i = 0; i < diff.length; i++){
-      console.log(diff[i])
-    oscillators[diff[i]].volume.rampTo(-100, 0.05);
-  }
-  setTimeout(splicer, 10);
-}
-
-function splicer() {
-  planetOptions.splice(tempPlanetIndex, 1);
-  for (let i = 0; i < planetOptions.length; i++) {
-    planetOptions[i].pos.x = width / 20;
-    planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
-  }
 }
 
 function moonDelete() {
-  console.log('nowmrkrabs?')
   moons[tempPlanetIndex].splice(tempMoonIndex, 0);
   tempMoon = false;
 }
 
 function planetAdd() {
-  //planetOptions.length - 1 == planetNumber
-  //planetNumber is increased at the en
   planetNumber++;
   let p = planetNumber;
   let d = diff[0];
+  let maxDist = dist(width/2, height/2, mouseX, mouseY)
+  //angle of velocity to be passed to a new planet
+  tempPlanetAngle();
+  //eccentricity offset for new planet
+  tempPlanetEccentricity();
 
+  // if delted planets bank is empty, add new planets
+  if (diff.length == 0){
+    planets.push(new Planet(mouseX, mouseY, planetRadii[p] * 2, planetColours[p], eccentricityNewPlanet, angleNewPlanet, p));
+    planetOptions.push(new Planet(width / 20 - width / 2, p * height/p - height / 2 + height / (p*2) + 1, height/16, planetColours[p]));
+    loadSounds(p);
+    startSounds(p);
+  //else re-add from deleted planets bank
+  } else {
+    oscillators[d].volume.rampTo(-25, 0.05);
+    planets.splice(d, 0, new Planet(mouseX, mouseY, planetRadii[d] * 2, planetColours[d], eccentricityNewPlanet, angleNewPlanet, d));
+    planetOptions.splice(d, 0, new Planet(width / 20 - width / 2, i * height/d - height / 2 + height / (d*2) + 1, height/16, planetColours[d]));
+    diff.splice(0, 1);
+    }
+
+  //cOME BACK T THIS!!!!!
+  if (planetNumber == fixedPlanetIndices.length) {
+    maxPlanetNumber++;
+    fixedPlanetIndices.push(maxPlanetNumber - 1);
+  }
+
+  //reorganizes planets menu button on the left hand side
+  planetOptionsOrganize();
+}
+
+function planetOptionsOrganize() {
+  for (let i = 0; i < planetOptions.length; i++) {
+     planetOptions[i].pos.x = 30;
+     planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
+  }
+}
+
+function moonAdd() {
+  let moonNumber = moons.length;
+  //angle of velocity to be passed to a new moon
+  tempPlanetAngle();
+  //eccentricity offset for new moon
+  tempPlanetEccentricity();
+  if (moons[tempPlanetIndex].length < 3){
+    moons[tempPlanetIndex].push(new Planet(mouseX, mouseY, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
+  }
+}
+
+function loadSounds(p) {
   fmOsc = new Tone.FMOscillator({
     frequency: pitches[p],
     type: "sine",
@@ -453,87 +542,51 @@ function planetAdd() {
     modulationType: "square",
     volume: -25
   }).toDestination();
-
-  pan = new Tone.Panner(0).toDestination();
-
+  pan = new Tone.Chorus(1.5, 2.5, 0).toDestination().start();
   tremolo = new Tone.Tremolo(6, 0).toDestination().start();
-
-
-  //let d = 1;
-  // REORGANISE THIS CODE SO THAT P || D CAN BE USED ON THE SAME CODE
-  if (diff.length == 0){
-    tempPlanetAngle();
-    tempPlanetEccentricity();
-    // new model
-    if (dist(width/2, height/2, mouseX, mouseY) < height/2) {
-
-      planets.push(new Planet(mouseX, mouseY, planetRadii[p] * 2, planetColours[p], eccentricityNewPlanet, angleNewPlanet, p));
-      planetOptions.push(new Planet(width / 20 - width / 2, p * height/p - height / 2 + height / (p*2) + 1, height/16, planetColours[p]));
-      oscillators.push(fmOsc);
-      tremolos.push(tremolo)
-      panners.push(pan)
-      oscillators[p].connect(tremolos[p], panners[p]).start();
-
-    } else {
-      console.log("outOfBounds!")
-      spaceClicked = false;
-    }
-  } else {
-    oscillators[d].volume.rampTo(-25, 0.05);
-    tempPlanetAngle();
-    tempPlanetEccentricity();
-    planets.splice(d, 0, new Planet(mouseX, mouseY, planetRadii[d] * 2, planetColours[d], eccentricityNewPlanet, angleNewPlanet, d));
-    planetOptions.splice(d, 0, new Planet(width / 20 - width / 2, i * height/d - height / 2 + height / (d*2) + 1, height/16, planetColours[d]));
-    diff.splice(0, 1);
-    }
-
-  if (planetNumber == fixedPlanetIndices.length) {
-    maxPlanetNumber++;
-    fixedPlanetIndices.push(maxPlanetNumber - 1);
-  }
-
-  for (let i = 0; i < planetOptions.length; i++) {
-    // oscillators[i].amp(0.2/8);
-     planetOptions[i].pos.x = width / 20;
-     planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
-  }
 }
 
-function moonAdd() {
-  let moonNumber = moons.length;
-  let m = moonNumber;
-  let rm = random(1, moonNumber);
-  tempPlanetAngle();
-  tempPlanetEccentricity();
-  if (moons[tempPlanetIndex].length < 3){
-    moons[tempPlanetIndex].push(new Planet(mouseX, mouseY, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
-  }
+function startSounds(p) {
+  oscillators.push(fmOsc);
+  tremolos.push(tremolo);
+  panners.push(pan);
+  oscillators[p].connect(tremolos[p]);
+  oscillators[p].connect(panners[p]);
+  oscillators[p].start();
 }
 
 function createTempPlanet(){
-  tempPlanetPulse();
-}
-
-function showBin(){
-  imageMode(CENTER);
-  image(bin, width/2, height - 20, 30, 30);
-}
-
-function createTempMoon() {
+  showBin();
+  //temp planet pulses
   let pulsing = sin(pulse += 0.05);
-  fill(moonColours[0], moonColours[1], moonColours[2]);
-  ellipse(mouseX - xOffset, mouseY - yOffset, planetRadii[2]*2 + pulsing*5);
-  tempPlanetAngle();
-}
-
-function tempPlanetPulse() {
-  let pulsing = sin(pulse += 0.05);
+  //if planet is in bin change colour to red, else remain as is
   if (mouseY > height - height/10){
     fill(255, 0, 0, 50);
   } else {
   fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2], 100)
   }
+  //temp planet
   ellipse(mouseX - xOffset, mouseY - yOffset, tempPlanetSpecs[0] + pulsing*5);
+}
+
+function createTempMoon() {
+  showBin();
+  //temp moon pulses
+  let pulsing = sin(pulse += 0.05);
+  //if moon is in bin change colour to red, else remain as is
+  if (mouseY > height - height/10){
+    fill(255, 0, 0, 50);
+  } else {
+  fill(moonColours[0], moonColours[1], moonColours[2]);
+  }
+  //temp moon
+  ellipse(mouseX - xOffset, mouseY - yOffset, planetRadii[2]*2 + pulsing*5);
+}
+
+function showBin(){
+  //bin image
+  imageMode(CENTER);
+  image(bin, width/2, height - 20, 30, 30);
 }
 
 function tempPlanetAngle(){
@@ -557,7 +610,6 @@ function tempPlanetEccentricity() {
   let v1 = dist(width/2, height/2, mouseX, mouseY);
   v1 = Math.sqrt(v1);
   eccentricityNewPlanet = map(v1, 0, height/2, 2, -20)
-  console.log(eccentricityNewPlanet);
 }
 
 class Planet {
@@ -622,4 +674,18 @@ class Sun {
      force.setMag(strength);
      planet.applyForce(force);
      }
+}
+
+class Star {
+  constructor(x, y, r) {
+    this.x = x;
+    this.y = y;
+    this.r = r;
+  }
+
+  show() {
+    noStroke();
+    fill(114);
+    ellipse(this.x, this.y, this.r*2);
+  }
 }
