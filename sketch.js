@@ -59,7 +59,7 @@ let filter;
 let filterFreq = 1500;
 let distortion;
 let distortionMap = 0;
-let tremoloMap = 0;
+let tremoloMap = 1;
 let tempMoonIndex;
 let diff = [];
 let eccentricityNewPlanet;
@@ -155,7 +155,7 @@ function timbralProperties() {
   //map tremolo to second moon
   if (moons[tempPlanetIndex].length > 1){
     let tremoloDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
-    tremoloMap = map(tremoloDistance, 0, width/2, 0, 1)
+    tremoloMap = map(tremoloDistance, 0, width/2, 0.99, 1.01)
     }
   //map chorus to third moon
   if (moons[tempPlanetIndex].length > 2){
@@ -170,9 +170,11 @@ function timbralProperties() {
   //assign mappings to values
   if (moons[tempPlanetIndex].length > 0) {
     oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
-    panners[tempPlanetIndex].feedback.value = panMap;
-    panners[tempPlanetIndex].depth = panMap;
-    tremolos[tempPlanetIndex].depth.value = tremoloMap;
+    console.log(tremoloMap);
+    oscillators[tempPlanetIndex].harmonicity.value = tremoloMap;
+    //panners[tempPlanetIndex].feedback.value = panMap;
+    //panners[tempPlanetIndex].depth = panMap;
+    //tremolos[tempPlanetIndex].decay.value = tremoloMap;
   }
 }
 
@@ -258,7 +260,7 @@ function mouseDragged(){
   if (solarSystemMode && dragging == true){
     for (let i = 0; i < planets.length; i++){
       if (dist(mouseX, mouseY, planets[i].pos.x, planets[i].pos.y) < planets[i].r){
-        if (!tempMoon){
+        if (!tempPlanet){
           planets.splice(i, 1);
           setTimeout(timer, 10);
         }
@@ -288,7 +290,7 @@ function timer() {
 
 function touchStarted() {
 //begin interface with touch
-  //Tone.start();
+  Tone.start();
     if (started == false) {
     //Tone.js doesn't always begin first time round (particularly ...
     // ... on touch devices) so, it is started for a second time
@@ -309,7 +311,9 @@ function touchStarted() {
     if (spaceClicked && moonMode) {
       moonAdd();
     }
-    return false;
+    if (started == true) {
+      return false;
+    }
 }
 
 function touchEnded() {
@@ -371,7 +375,7 @@ function planetOptionsClick() {
       spaceClicked = false;
       //maybe this'll need fixing, deleting values for specific moon mode
       panMap = 0;
-      tremoloMap = 0;
+      tremoloMap = 1;
       for (var o = 0; o < planets.length; o++) {
           console.log(planets[o].number)
           oscillators[planets[o].number].volume.rampTo(-25, 0.05);
@@ -394,7 +398,7 @@ function planetOptionsClick() {
       }
       //maybe delete
       panMap = 0;
-      tremoloMap = 0;
+      tremoloMap = 1;
     }
   }
 }
@@ -542,16 +546,15 @@ function loadSounds(p) {
     modulationType: "square",
     volume: -25
   }).toDestination();
-  pan = new Tone.Chorus(1.5, 2.5, 0).toDestination().start();
-  tremolo = new Tone.Tremolo(6, 0).toDestination().start();
+  //pan = new Tone.Chorus(1.5, 2.5, 0).toDestination();
 }
 
 function startSounds(p) {
   oscillators.push(fmOsc);
-  tremolos.push(tremolo);
-  panners.push(pan);
-  oscillators[p].connect(tremolos[p]);
-  oscillators[p].connect(panners[p]);
+  //tremolos.push(tremolo);
+  //panners.push(pan);
+  //oscillators[p].connect(tremolos[p]);
+  //oscillators[p].connect(panners[p]);
   oscillators[p].start();
 }
 
