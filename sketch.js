@@ -71,6 +71,8 @@ let tremolos = [];
   let volDistance = [];
   let volMap = [];
   let stars = [];
+  let partials = 20;
+
 
 function preload() {
   bin = loadImage('bin.png');
@@ -159,8 +161,8 @@ function timbralProperties() {
     }
   //map chorus to third moon
   if (moons[tempPlanetIndex].length > 2){
-    let panDistance = moons[tempPlanetIndex][2].pos.x;
-    panMap = map(panDistance, 0, width, 0, 1);
+    let panDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
+    partials = round(map(panDistance, 0, width, 20, 200));
     }
   //map modulation index to first moon
   if (moons[tempPlanetIndex].length > 0){
@@ -170,8 +172,9 @@ function timbralProperties() {
   //assign mappings to values
   if (moons[tempPlanetIndex].length > 0) {
     oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
-    console.log(tremoloMap);
+    console.log(partials);
     oscillators[tempPlanetIndex].harmonicity.value = tremoloMap;
+    oscillators[tempPlanetIndex].modulationType = `square${partials}`;
     //panners[tempPlanetIndex].feedback.value = panMap;
     //panners[tempPlanetIndex].depth = panMap;
     //tremolos[tempPlanetIndex].decay.value = tremoloMap;
@@ -543,7 +546,7 @@ function loadSounds(p) {
     type: "sine",
     harmonicity: 1,
     modulationIndex: 0,
-    modulationType: "square",
+    modulationType: `square${partials}`,
     volume: -25
   }).toDestination();
   //pan = new Tone.Chorus(1.5, 2.5, 0).toDestination();
