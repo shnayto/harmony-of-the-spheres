@@ -412,7 +412,7 @@ function planetOptionsClick() {
       solarSystemMode = true;
       spaceClicked = false;
       //maybe this'll need fixing, deleting values for specific moon mode
-      panMap = 0;
+      tremoloMap = 0;
       partials = 10;
       for (var o = 0; o < planets.length; o++) {
           oscillators[planets[o].number].volume.rampTo(-25, 0.05);
@@ -434,7 +434,7 @@ function planetOptionsClick() {
           oscillators[tempPlanetIndex].volume.rampTo(-20, 0.05);
       }
       //maybe delete
-      panMap = 0;
+      tremoloMap = 1;
       partials = 10;
     }
   }
