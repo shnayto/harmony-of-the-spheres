@@ -175,7 +175,7 @@ function timbralProperties() {
   //map tremolo to second moon
   if (moons[tempPlanetIndex].length > 1){
     let tremoloDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
-    tremoloMap = map(tremoloDistance, 0, width/2, 0.99, 1.01)
+    tremoloMap = map(tremoloDistance, 0, width/2, 0.99, 1.04)
     }
   //map chorus to third moon
   if (moons[tempPlanetIndex].length > 2){
