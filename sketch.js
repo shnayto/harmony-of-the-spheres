@@ -71,7 +71,12 @@ let tremolos = [];
   let volDistance = [];
   let volMap = [];
   let stars = [];
-  let partials = 20;
+  let partials = 10;
+  let xx = 0
+
+
+const panner = new Tone.Panner(xx).toDestination()
+//panner.panningModel = 'HRTF'
 
 
 function preload() {
@@ -80,7 +85,7 @@ function preload() {
 function setup(){
   createCanvas(windowWidth, windowHeight);
   planetNumber = -1;
-//  pixelDensity(1);
+  pixelDensity(1);
   sun = new Sun(width/2, height/2);
   for (let i = 0; i < width/30; i++) {
     stars[i] = new Star(random(0, width), random(0, height), random(0.5, 1.5));
@@ -112,6 +117,7 @@ function graphics(){
   textSize(width/15)
   titleText = text("Harmony of the Spheres", width/2, height/4)
 }
+
 
 function draw(){
   background(45, 35, 35);
@@ -162,7 +168,7 @@ function timbralProperties() {
   //map chorus to third moon
   if (moons[tempPlanetIndex].length > 2){
     let panDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
-    partials = round(map(panDistance, 0, width, 20, 200));
+    partials = round(map(panDistance, 0, width/2, 10, 100));
     }
   //map modulation index to first moon
   if (moons[tempPlanetIndex].length > 0){
@@ -172,9 +178,9 @@ function timbralProperties() {
   //assign mappings to values
   if (moons[tempPlanetIndex].length > 0) {
     oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
-    console.log(partials);
     oscillators[tempPlanetIndex].harmonicity.value = tremoloMap;
     oscillators[tempPlanetIndex].modulationType = `square${partials}`;
+    //console.log(oscillators[tempPlanetIndex].modulationType);
     //panners[tempPlanetIndex].feedback.value = panMap;
     //panners[tempPlanetIndex].depth = panMap;
     //tremolos[tempPlanetIndex].decay.value = tremoloMap;
@@ -191,7 +197,10 @@ function solarSystemDraw() {
     planets[i].move();
     sun.attract(planets[i]);
     //console.log(freq);
-
+  xx = planets[0].pos.x - width/2;
+  //console.log(xx);
+  console.log(xx/400);
+  panner.pan.value = xx/300;
   }
   //freqModBodge();
   //move + apply gravitational force to moons, but don't show . . .
@@ -378,7 +387,7 @@ function planetOptionsClick() {
       spaceClicked = false;
       //maybe this'll need fixing, deleting values for specific moon mode
       panMap = 0;
-      tremoloMap = 1;
+      partials = 10;
       for (var o = 0; o < planets.length; o++) {
           console.log(planets[o].number)
           oscillators[planets[o].number].volume.rampTo(-25, 0.05);
@@ -401,7 +410,7 @@ function planetOptionsClick() {
       }
       //maybe delete
       panMap = 0;
-      tremoloMap = 1;
+      partials = 10;
     }
   }
 }
@@ -547,8 +556,8 @@ function loadSounds(p) {
     harmonicity: 1,
     modulationIndex: 0,
     modulationType: `square${partials}`,
-    volume: -25
-  }).toDestination();
+    volume: -30
+  }).connect(panner);
   //pan = new Tone.Chorus(1.5, 2.5, 0).toDestination();
 }
 
@@ -558,6 +567,7 @@ function startSounds(p) {
   //panners.push(pan);
   //oscillators[p].connect(tremolos[p]);
   //oscillators[p].connect(panners[p]);
+  //oscillators[p].();
   oscillators[p].start();
 }
 
