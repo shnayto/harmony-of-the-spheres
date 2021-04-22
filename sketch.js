@@ -594,10 +594,10 @@ function moonAdd() {
   }
 }
 let chorus = new Tone.Chorus(2, 1.5, 0).toDestination().start();
-let reverb = new Tone.Freeverb({
-  decay: 2,
-  wet: 0
-}).toDestination();
+// let reverb = new Tone.Freeverb({
+//   decay: 2,
+//   wet: 0
+// }).toDestination();
 
 function loadSounds(p) {
   fmOsc = new Tone.FMOscillator({
@@ -621,7 +621,7 @@ function startSounds(p) {
 
   //oscillators[p].connect(chorus);
   oscillators[p].connect(chorus);
-  oscillators[p].connect(reverb);
+  //oscillators[p].connect(reverb);
 
 
   oscillators[p].volume.rampTo(-30, 0.05);
