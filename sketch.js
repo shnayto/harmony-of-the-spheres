@@ -185,7 +185,7 @@ function timbralProperties() {
   //map modulation index to first moon
   if (moons[tempPlanetIndex].length > 0){
     let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, width/2, -1, 4);
+    modulationIndexMap = map(modDistance, 0, width/2, 0, 4);
   }
   //assign mappings to values
   if (moons[tempPlanetIndex].length > 0) {
@@ -281,15 +281,15 @@ function options() {
 function buttons() {
     fill(150, 150);
     chorusX = width - 60;
-    chorusY = height/2.5;
+    chorusY = height/2;
     chorusR = height/32;
     chorusButton = ellipse(chorusX, chorusY, chorusR*2);
 
-    reverbX = width - 60;
-    reverbY = height - height/2.5;
-    reverbR = height/32;
-
-    reverbButton = ellipse(reverbX, reverbY, reverbR*2);
+    // reverbX = width - 60;
+    // reverbY = height - height/2.5;s
+    // reverbR = height/32;
+    //
+    // reverbButton = ellipse(reverbX, reverbY, reverbR*2);
 }
 
 
@@ -306,7 +306,7 @@ function mouseDragged(){
     }
   }
 // delete dragged moon, replace with temporary one
-  if (moonMode){
+  if (moonMode && dragging == true){
     for (let i = 0; i < moons[tempPlanetIndex].length; i++){
       if (dist(mouseX, mouseY, moons[tempPlanetIndex][i].pos.x, moons[tempPlanetIndex][i].pos.y) < moons[tempPlanetIndex][i].r){
         if (!tempMoon){
@@ -400,6 +400,7 @@ function moonClick() {
         xOffset = mouseX - moons[tempPlanetIndex][t].pos.x;
         yOffset = mouseY - moons[tempPlanetIndex][t].pos.y;
         spaceClicked = false;
+        dragging = true;
       }
     }
   }
@@ -412,7 +413,7 @@ function planetOptionsClick() {
       solarSystemMode = true;
       spaceClicked = false;
       //maybe this'll need fixing, deleting values for specific moon mode
-      tremoloMap = 0;
+      tremoloMap = 1;
       partials = 10;
       for (var o = 0; o < planets.length; o++) {
           oscillators[planets[o].number].volume.rampTo(-25, 0.05);
@@ -441,15 +442,15 @@ function planetOptionsClick() {
 }
 
 function buttonClick() {
-  if (reverbTrigger == false && dist(mouseX, mouseY, reverbX, reverbY) < reverbR){
-    reverbTrigger = true;
-    reverb.wet.rampTo(0.5, 0.5);
-    spaceClicked = false;
-  } else if (dist(mouseX, mouseY, reverbX, reverbY) < reverbR) {
-    reverbTrigger = false;
-    reverb.wet.rampTo(0, 0.5)
-    spaceClicked = false;
-  }
+  // if (reverbTrigger == false && dist(mouseX, mouseY, reverbX, reverbY) < reverbR){
+  //   reverbTrigger = true;
+  //   reverb.wet.rampTo(0.5, 0.5);
+  //   spaceClicked = false;
+  // } else if (dist(mouseX, mouseY, reverbX, reverbY) < reverbR) {
+  //   reverbTrigger = false;
+  //   reverb.wet.rampTo(0, 0.5)
+  //   spaceClicked = false;
+  // }
   if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
     chorusTrigger = true;
     chorus.depth = 0.8
@@ -504,7 +505,7 @@ function planetDelete() {
   planetOrderLogger();
 // ensure other planets are at -25dB
   for (var i = 0; i < planets.length; i++) {
-      oscillators[planets[i].number].volume.rampTo(-30, 0.05);
+      oscillators[planets[i].number].volume.rampTo(-25, 0.05);
   }
 // mute the deleted planet's oscillator
   for (let i = 0; i < diff.length; i++){
@@ -624,7 +625,7 @@ function startSounds(p) {
   //oscillators[p].connect(reverb);
 
 
-  oscillators[p].volume.rampTo(-30, 0.05);
+  oscillators[p].volume.rampTo(-25, 0.05);
   //oscillators[p].();
   oscillators[p].start();
 }
