@@ -255,7 +255,7 @@ function freqModBodge() {
 }
 
 function moonModeDraw() {
-  text("Moon Mode", width/2, 30);
+  text("Planet Mode", width/2, 30);
   //replace sun with selected planet
   fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2]);
   ellipse(sun.pos.x, sun.pos.y, sun.r*2);
