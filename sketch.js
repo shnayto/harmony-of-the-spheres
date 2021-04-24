@@ -76,6 +76,7 @@ let tremolos = [];
   let xxs = []
   let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR;
   let reverbValue = 0, reverbTrigger = false, reverbButton, reverbX, reverbY, reverbR;
+let boundary, boundaryR;
 
 const channel = new Tone.Channel({
   volume: 0
@@ -153,7 +154,13 @@ function draw(){
   }
 
   buttons();
-
+  push();
+  fill(255, 3);
+  stroke(255, 8);
+  strokeWeight(2);
+  boundaryR = height - 40
+  boundary = ellipse(width/2, height/2, boundaryR);
+  pop();
 
   for (let t = 0; t < planets.length; t++){
     for(let i = 1; i < planets.length - 1; i++){
@@ -344,6 +351,8 @@ function touchStarted() {
     moonClick();
 // if a button on the right is clicked
     buttonClick();
+// if sun is clicked, do not add planet as it otherwise flies away
+    constraint();
 // if a random space is touched, add planet or moon
     if (spaceClicked && planets.length < 8 && solarSystemMode) {
       planetAdd();
@@ -372,6 +381,17 @@ function timerDrag() {
   } else {
     moonMode = true;
     solarSystemMode = false;
+    spaceClicked = false;
+  }
+}
+
+function constraint() {
+  if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*1.5){
+    alert("Try Clicking Around the Sun Instead!");
+    spaceClicked = false;
+  }
+  if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) > boundaryR/2 && spaceClicked == true){
+    alert("Out of Bounds, Son!");
     spaceClicked = false;
   }
 }
