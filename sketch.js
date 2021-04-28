@@ -98,13 +98,15 @@ function setup(){
   pixelDensity(1);
   sun = new Sun(width/2, height/2);
   for (let i = 0; i < width/30; i++) {
-    stars[i] = new Star(random(0, width), random(0, height), random(0.5, 1.5));
+    stars[i] = new Star(random(0, width), random(0, height), random(1, 2));
   }
 }
 
 function startScreen() {
     if (started == false) {
     graphics();
+    sun.glow();
+    sun.show();
   } else if (!breakMe && started == true) {
     fade -= 10;
     graphics();
@@ -122,10 +124,10 @@ function graphics(){
   fill(250, fade);
   textSize(width/35);
   textAlign(CENTER, CENTER);
-  textFont('Georgia')
+  textFont('Georgia');
   welcomeText = text("Touch to Begin", width/2, height/2.5);
-  textSize(width/15)
-  titleText = text("Harmony of the Spheres", width/2, height/4)
+  textSize(width/15);
+  titleText = text("Harmony of the Spheres", width/2, height/4);
 }
 
 
@@ -136,7 +138,6 @@ function draw(){
   for (let i = 0; i < stars.length; i++) {
     stars[i].show();
   }
-  sun.show();
 // if we're in solar system mode
   if (solarSystemMode){
     solarSystemDraw();
@@ -210,13 +211,22 @@ function solarSystemDraw() {
   textSize(width/50)
   fill(255, 150);
   text("Solar System", width/2, 30);
+  sun.show();
+  sun.glow();
 //move, show and apply gravitational force to planets
   for (let i = 0; i < planets.length; i++) {
     planets[i].show();
     planets[i].move();
+    planets[i].angleFind();
     sun.attract(planets[i]);
+//REALLY BUGGY HOMIE
+    if (planets[i].pos.x > width || planets[i].pos.x < 0) {
+      planetOutOfBounds();
+    } else if (planets[i].pos.y > height || planets[i].pos.y < 0) {
+      planetOutOfBounds();
+    }
     //console.log(freq);
-  xxs[i] = planets[i].pos.x - width/2;
+  //xxs[i] = planets[i].pos.x - width/2;
   //console.log(xx);
   //console.log(xx/400);
    //panners[i].pan.value = xxs[i]/300;
@@ -239,6 +249,14 @@ function solarSystemDraw() {
   if (tempPlanet == true) {
     createTempPlanet();
   }
+}
+
+function planetOutOfBounds() {
+  planetNumber--;
+  planets.splice(i, 1);
+// rearrange planet menu on left
+  planetOptions.splice(tempPlanetIndex, 1);
+  planetOptionsOrganize();
 }
 
 function freqModBodge() {
@@ -264,10 +282,6 @@ function moonModeDraw() {
        moons[tempPlanetIndex][i].show();
        moons[tempPlanetIndex][i].move();
        sun.attract(moons[tempPlanetIndex][i]);
-   }
-// create a temporary moon to replace existing one
-   if (tempMoon == true) {
-     createTempMoon();
    }
 }
 
@@ -312,14 +326,13 @@ function mouseDragged(){
       }
     }
   }
-// delete dragged moon, replace with temporary one
+// drag moon
   if (moonMode && dragging == true){
     for (let i = 0; i < moons[tempPlanetIndex].length; i++){
       if (dist(mouseX, mouseY, moons[tempPlanetIndex][i].pos.x, moons[tempPlanetIndex][i].pos.y) < moons[tempPlanetIndex][i].r){
-        if (!tempMoon){
-          moons[tempPlanetIndex].splice(i, 1);
-          setTimeout(timer, 10);
-        }
+        moons[tempPlanetIndex][i].pos.x = mouseX - xOffset;
+        moons[tempPlanetIndex][i].pos.y = mouseY - yOffset;
+        tempMoon = true;
       }
     }
   }
@@ -328,8 +341,6 @@ function mouseDragged(){
 function timer() {
   if (solarSystemMode) {
     tempPlanet = true;
-  } else {
-    tempMoon = true;
   }
 }
 
@@ -391,7 +402,7 @@ function constraint() {
     spaceClicked = false;
   }
   if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) > boundaryR/2 && spaceClicked == true){
-    alert("Out of Bounds, Son!");
+    alert("Out of Bounds!");
     spaceClicked = false;
   }
 }
@@ -510,11 +521,23 @@ function resetPlanet() {
   planets.splice(tempPlanetIndex, 0, new Planet(mouseX - xOffset, mouseY - yOffset, tempPlanetSpecs[0], tempPlanetSpecs[1], eccentricityNewPlanet, angleNewPlanet, tempPlanetNumber));
 }
 
+// this.velY = cos(this.angle);
+// this.velX = sin(this.angle);
+// // set coordinates to planet pos
+// this.pos = createVector(x, y);
+// // set initial ang velocity based on initial angle
+// this.vel = createVector(this.eccentricity * this.velX, this.eccentricity * this.velY
+
 function resetMoon() {
   tempMoon = false;
   tempPlanetAngle();
   tempPlanetEccentricity();
-  moons[tempPlanetIndex].push(new Planet(mouseX - xOffset, mouseY - yOffset, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
+  //moons[tempPlanetIndex][tempMoonIndex].eccentricity = eccentricityNewPlanet;
+  moons[tempPlanetIndex][tempMoonIndex].vel.x = sin(angleNewPlanet) * eccentricityNewPlanet;
+  moons[tempPlanetIndex][tempMoonIndex].vel.y = cos(angleNewPlanet) * eccentricityNewPlanet;
+
+  //moons[tempPlanetIndex].push(new Planet(mouseX - xOffset, mouseY - yOffset, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
+  console.log(moons[tempPlanetIndex][tempMoonIndex].angle)
 }
 
 function planetDelete() {
@@ -708,15 +731,17 @@ function tempPlanetEccentricity() {
 }
 
 class Planet {
-
   constructor(x, y, r, c, e, a, n){
+    this.eccentricity = e;
+    this.angle = a;
+    //this.angle2 = a;
     //set X and Y coordinates on unit circle accordingly
-    this.velY = cos(a);
-    this.velX = sin(a);
+    this.velY = cos(this.angle);
+    this.velX = sin(this.angle);
     // set coordinates to planet pos
     this.pos = createVector(x, y);
     // set initial ang velocity based on initial angle
-    this.vel = createVector(e * this.velX, e * this.velY);
+    this.vel = createVector(this.eccentricity * this.velX, this.eccentricity * this.velY);
     this.acc = createVector(0, 0);
     this.mass = 1;
     this.r = r;
@@ -735,11 +760,30 @@ class Planet {
     this.pos.add(this.vel);
   }
 
+  angleFind(){
+    let v2 = createVector(width/2, 0);
+    let v1 = createVector(this.pos.x - width/2, this.pos.y - height/2);
+    let angleBetween = v1.angleBetween(v2);
+    if (angleBetween < 0) {
+      this.angle2 = angleBetween  + TWO_PI;
+    } else {this.angle2 = angleBetween};
+  }
+
   show(){
     noStroke();
-    fill(this.c[0], this.c[1], this.c[2], 200)
+    fill(this.c[0]+60, this.c[1]+60, this.c[2]+60, 200);
     ellipse(this.pos.x, this.pos.y, this.r);
+    for (let i = 0; i < 5; i++){
+      fill(this.c[0]-5 * (i + 1), this.c[1]-5 * (i + 1), this.c[2]-5 * (i + 1), 40);
+      ellipse(this.pos.x + cos(this.angle2) * (i + 1), this.pos.y - sin(this.angle2) * (i + 1), this.r - (2 * (i + 1)));
+    }
   }
+  //(TOO CLOSE TO SUN REPLACMENT
+  //TRY clicking aroun planet instead!!
+  //MOON ADDED!
+  //PLANET ADDED!
+  //drag instructions
+  //Infromation button as well!
 
   showOptions(){
     noStroke();
@@ -758,8 +802,16 @@ class Sun {
 
    show() {
     noStroke();
-    fill(245, 214, 38, 150);
+    fill(235, 204, 35, 250);
     ellipse(this.pos.x, this.pos.y, this.r*2);
+   }
+
+   glow() {
+     //adds a healthy glow around sun
+     for (let i = 0; i < 30; i++){
+       fill(235, 204, 35, 1);
+       ellipse(this.pos.x, this.pos.y, this.r*2 + i * 3)
+     }
    }
 
    attract(planet){
@@ -779,6 +831,7 @@ class Star {
   }
 
   show() {
+    //directionalLight(250, 250, 250, width/2, -height/2, -1);
     noStroke();
     fill(114);
     ellipse(this.x, this.y, this.r*2);
