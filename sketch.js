@@ -79,6 +79,7 @@ let tremolos = [];
 let boundary, boundaryR;
 let newPlanet;
 let screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
+let boundaryAlpha = 3;
 
 const channel = new Tone.Channel({
   volume: 0
@@ -188,7 +189,7 @@ function draw(){
 
   buttons();
   push();
-  fill(255, 3);
+  fill(255, boundaryAlpha);
   stroke(255, 8);
   strokeWeight(2);
   boundaryR = height - 40
@@ -289,8 +290,6 @@ function solarSystemDraw() {
 
 function helpModeDraw() {
   //console.log(screenTwo);
-  fill(50, 155);
-  gradient = rect(0, 0, width, height);
   if (screenOne && moonMode) {
     fill(255)
     textAlign(LEFT, CENTER);
@@ -305,21 +304,22 @@ function helpModeDraw() {
     fill(255)
     text('Touch to Add More Planets to the Solar System', width/2, height/4);
     noFill();
-    for (let i = 0; i < 20; i++){
-      stroke(255, 155 - (i * 10));
-      strokeWeight(1);
-      ellipse(width/2, height/4 + 60, 50 + (i + 1))
-    }
+    boundaryAlpha = 25;
   }
   if (screenTwo) {
+    fill(50, 155);
+    gradient = rect(0, 0, width, height);
     fill(255)
     textAlign(LEFT, CENTER);
-    text("Take a Closer Look at One of the Planets", planetOptions[1].pos.x + planetOptions[1].r/2 + 20, planetOptions[1].pos.y);
+    text("Take a Closer Look at One of the Planets", planetOptions[0].pos.x + planetOptions[0].r/2 + 20, height/2);
     noFill();
-    for (let i = 0; i < 20; i++){
-      stroke(255, 155 - (i * 10));
-      strokeWeight(1);
-      ellipse(planetOptions[1].pos.x, planetOptions[1].pos.y, planetOptions[1].r + 10 + (i + 1))
+    boundaryAlpha = 3;
+    for (let j = 0; j < planetOptions.length; j++){
+      for (let i = 0; i < 20; i++){
+        stroke(255, 155 - (i * 10));
+        strokeWeight(1);
+        ellipse(planetOptions[j].pos.x, planetOptions[j].pos.y, planetOptions[j].r + 10 + (i + 1))
+      }
     }
   }
   if (screenThree) {
@@ -327,31 +327,25 @@ function helpModeDraw() {
     textAlign(CENTER, CENTER);
     text("Add Moons to Change this Planet's Sound", width/2, height/4);
     noFill();
-    for (let i = 0; i < 20; i++){
-      stroke(255, 155 - (i * 10));
-      strokeWeight(1);
-      ellipse(width/2, height/4 + 60, 50 + (i + 1))
-    }
+    boundaryAlpha = 25;
   }
   if (screenFour) {
     fill(255);
     text("Drag Moons Away from Planet in the Centre to Increase Effect", width/2, height/4);
     noFill();
-    for (let i = 0; i < 20; i++){
-      stroke(255, 155 - (i * 10));
-      strokeWeight(1);
-      ellipse(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, moons[tempPlanetIndex][0].r + 10 + (i + 1))
-    }
   }
   if (screenFive) {
+    fill(50, 155);
+    gradient = rect(0, 0, width, height);
     fill(255)
     textAlign(LEFT, CENTER);
-    text("Return to Solar System", planetOptions[1].pos.x + planetOptions[1].r/2 + 20, planetOptions[1].pos.y);
+    text("Return to Solar System", planetOptions[tempPlanetIndex].pos.x + planetOptions[tempPlanetIndex].r/2 + 20, planetOptions[tempPlanetIndex].pos.y);
     noFill();
+    boundaryAlpha = 3;
     for (let i = 0; i < 20; i++){
       stroke(255, 155 - (i * 10));
       strokeWeight(1);
-      ellipse(planetOptions[1].pos.x, planetOptions[1].pos.y, planetOptions[1].r + 10 + (i + 1))
+      ellipse(planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y, planetOptions[tempPlanetIndex].r + 10 + (i + 1))
     }
   }
   if (screenSix) {
@@ -361,9 +355,10 @@ function helpModeDraw() {
 }
 
 function helpModeClick() {
-  if(screenFive && dist(mouseX, mouseY, planetOptions[1].pos.x, planetOptions[1].pos.y) < planetOptions[1].r) {
+  if(screenFive && dist(mouseX, mouseY, planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y) < planetOptions[tempPlanetIndex].r) {
     screenFive = false;
     screenSix = true;
+    helpAlpha = 100;
   }
   if (screenFour) {
     screenFive = true;
@@ -373,9 +368,13 @@ function helpModeClick() {
     screenFour = true;
     screenThree = false;
   }
-  if (screenTwo && dist(mouseX, mouseY, planetOptions[1].pos.x, planetOptions[1].pos.y) < planetOptions[1].r) {
-    screenThree = true;
-    screenTwo = false;
+  if (screenTwo) {
+    for (let i = 0; i < planetOptions.length; i++){
+      if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r) {
+        screenThree = true;
+        screenTwo = false;
+      }
+    }
   }
   if (screenOne && spaceClicked) {
     screenTwo = true;
@@ -632,6 +631,7 @@ function buttonClick() {
     helpTrigger = false;
     spaceClicked = false;
     helpAlpha = 100;
+    boundaryAlpha = 3;
     screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
   }
   if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
@@ -934,9 +934,6 @@ class Planet {
     }
   }
   //(TOO CLOSE TO SUN REPLACMENT
-  //MOON ADDED!
-  //PLANET ADDED!
-  //drag instructions
   //Infromation button as well!
   //menu bug!!
 
