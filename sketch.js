@@ -42,7 +42,7 @@ let xOffset, yOffset;
 let moonMode = false, solarSystemMode = false;
 let started = false;
 let breakMe = false;
-let fade = 155;
+let fade = 155; let fade2 = 155
 let dragging = false;
 let sorted = true;
 let spaceClicked = true;
@@ -74,9 +74,11 @@ let tremolos = [];
   let partials = 10;
   let xx = 0
   let xxs = []
-  let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR;
-  let reverbValue = 0, reverbTrigger = false, reverbButton, reverbX, reverbY, reverbR;
+  let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR, chorusAlpha = 100;
+  let helpTrigger = false, helpButton, helpX, helpY, helpR, helpAlpha = 100;
 let boundary, boundaryR;
+let newPlanet;
+let screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
 
 const channel = new Tone.Channel({
   volume: 0
@@ -90,12 +92,13 @@ let panner //= new Tone.Panner(xx).toDestination();
 
 
 function preload() {
-  bin = loadImage('bin.png');
+  binIcon = loadImage('bin.png');
+  helpIcon = loadImage('help.png');
 }
 function setup(){
   createCanvas(windowWidth, windowHeight);
   planetNumber = -1;
-  pixelDensity(1);
+  //pixelDensity(1);
   sun = new Sun(width/2, height/2);
   for (let i = 0; i < width/30; i++) {
     stars[i] = new Star(random(0, width), random(0, height), random(1, 2));
@@ -122,12 +125,37 @@ function graphics(){
   fill(50, fade);
   gradient = rect(0, 0, width, height);
   fill(250, fade);
-  textSize(width/35);
+  textSize(height/35);
   textAlign(CENTER, CENTER);
   textFont('Georgia');
   welcomeText = text("Touch to Begin", width/2, height/2.5);
   textSize(width/15);
   titleText = text("Harmony of the Spheres", width/2, height/4);
+}
+
+let fader = false;
+let textIsOnscreen = false;
+
+function planetAddedText() {
+    fill(250, fade2);
+    //let planetAddText = text("Planet Added", width/2, height - 30);
+      setTimeout(textFade, 600)
+    if (textIsOnscreen == false){
+      textIsOnscreen = true;
+      setTimeout(textOff, 1100);
+    }
+}
+
+function textOff() {
+    fader = false;
+    fade2 = 105;
+    newPlanet = false;
+    textIsOnscreen = false;
+}
+
+function textFade() {
+    fader = true;
+    fade2 -= 5;
 }
 
 
@@ -145,6 +173,10 @@ function draw(){
 // if we're in moon mode
   if (moonMode) {
     moonModeDraw();
+  }
+//help mode screen
+  if (helpTrigger) {
+    helpModeDraw();
   }
 // sound synthesis + effects control
   timbralProperties();
@@ -208,8 +240,9 @@ function timbralProperties() {
 }
 
 function solarSystemDraw() {
-  textSize(width/50)
+  textSize(height/30)
   fill(255, 150);
+  textAlign(CENTER, CENTER);
   text("Solar System", width/2, 30);
   sun.show();
   sun.glow();
@@ -249,6 +282,109 @@ function solarSystemDraw() {
   if (tempPlanet == true) {
     createTempPlanet();
   }
+  if (newPlanet == true) {
+    planetAddedText()
+  }
+}
+
+function helpModeDraw() {
+  //console.log(screenTwo);
+  fill(50, 155);
+  gradient = rect(0, 0, width, height);
+  if (screenOne && moonMode) {
+    fill(255)
+    textAlign(LEFT, CENTER);
+    text("Return to Solar System", planetOptions[tempPlanetIndex].pos.x + planetOptions[tempPlanetIndex].r/2 + 10, planetOptions[tempPlanetIndex].pos.y);
+    noFill();
+    for (let i = 0; i < 20; i++){
+      stroke(255, 155 - (i * 10));
+      strokeWeight(1);
+      ellipse(planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y, planetOptions[tempPlanetIndex].r + 10 + (i + 1))
+    }
+  } else if (screenOne){
+    fill(255)
+    text('Touch to Add More Planets to the Solar System', width/2, height/4);
+    noFill();
+    for (let i = 0; i < 20; i++){
+      stroke(255, 155 - (i * 10));
+      strokeWeight(1);
+      ellipse(width/2, height/4 + 60, 50 + (i + 1))
+    }
+  }
+  if (screenTwo) {
+    fill(255)
+    textAlign(LEFT, CENTER);
+    text("Take a Closer Look at One of the Planets", planetOptions[1].pos.x + planetOptions[1].r/2 + 20, planetOptions[1].pos.y);
+    noFill();
+    for (let i = 0; i < 20; i++){
+      stroke(255, 155 - (i * 10));
+      strokeWeight(1);
+      ellipse(planetOptions[1].pos.x, planetOptions[1].pos.y, planetOptions[1].r + 10 + (i + 1))
+    }
+  }
+  if (screenThree) {
+    fill(255)
+    textAlign(CENTER, CENTER);
+    text("Add Moons to Change this Planet's Sound", width/2, height/4);
+    noFill();
+    for (let i = 0; i < 20; i++){
+      stroke(255, 155 - (i * 10));
+      strokeWeight(1);
+      ellipse(width/2, height/4 + 60, 50 + (i + 1))
+    }
+  }
+  if (screenFour) {
+    fill(255);
+    text("Drag Moons Away from Planet in the Centre to Increase Effect", width/2, height/4);
+    noFill();
+    for (let i = 0; i < 20; i++){
+      stroke(255, 155 - (i * 10));
+      strokeWeight(1);
+      ellipse(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, moons[tempPlanetIndex][0].r + 10 + (i + 1))
+    }
+  }
+  if (screenFive) {
+    fill(255)
+    textAlign(LEFT, CENTER);
+    text("Return to Solar System", planetOptions[1].pos.x + planetOptions[1].r/2 + 20, planetOptions[1].pos.y);
+    noFill();
+    for (let i = 0; i < 20; i++){
+      stroke(255, 155 - (i * 10));
+      strokeWeight(1);
+      ellipse(planetOptions[1].pos.x, planetOptions[1].pos.y, planetOptions[1].r + 10 + (i + 1))
+    }
+  }
+  if (screenSix) {
+    helpTrigger = false;
+    screenSix = false;
+  }
+}
+
+function helpModeClick() {
+  if(screenFive && dist(mouseX, mouseY, planetOptions[1].pos.x, planetOptions[1].pos.y) < planetOptions[1].r) {
+    screenFive = false;
+    screenSix = true;
+  }
+  if (screenFour) {
+    screenFive = true;
+    screenFour = false;
+  }
+  if (screenThree && spaceClicked) {
+    screenFour = true;
+    screenThree = false;
+  }
+  if (screenTwo && dist(mouseX, mouseY, planetOptions[1].pos.x, planetOptions[1].pos.y) < planetOptions[1].r) {
+    screenThree = true;
+    screenTwo = false;
+  }
+  if (screenOne && spaceClicked) {
+    screenTwo = true;
+    screenOne = false;
+  }
+  if (screenZero) {
+    screenOne = true;
+    screenZero = false;
+  }
 }
 
 function planetOutOfBounds() {
@@ -273,6 +409,9 @@ function freqModBodge() {
 }
 
 function moonModeDraw() {
+  textSize(height/30)
+  fill(255, 150);
+  textAlign(CENTER, CENTER);
   text("Planet Mode", width/2, 30);
   //replace sun with selected planet
   fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2]);
@@ -300,17 +439,22 @@ function options() {
 }
 
 function buttons() {
-    fill(150, 150);
+    fill(150, chorusAlpha);
     chorusX = width - 60;
     chorusY = height/2;
     chorusR = height/32;
     chorusButton = ellipse(chorusX, chorusY, chorusR*2);
 
-    // reverbX = width - 60;
-    // reverbY = height - height/2.5;s
-    // reverbR = height/32;
-    //
-    // reverbButton = ellipse(reverbX, reverbY, reverbR*2);
+    fill(150, helpAlpha/2);
+     helpX = width - 60;
+     helpY = height - 40;
+     helpR = height/32;
+     helpButton = ellipse(helpX, helpY, helpR*2);
+     imageMode(CENTER);
+     image(helpIcon, helpX, helpY, helpR * 1.5, helpR * 1.5);
+     if (helpTrigger == false){
+       helpButton = ellipse(helpX, helpY, helpR*2);
+     }
 }
 
 
@@ -365,6 +509,7 @@ function touchStarted() {
 // if sun is clicked, do not add planet as it otherwise flies away
     constraint();
 // if a random space is touched, add planet or moon
+    helpModeClick();
     if (spaceClicked && planets.length < 8 && solarSystemMode) {
       planetAdd();
     }
@@ -397,8 +542,12 @@ function timerDrag() {
 }
 
 function constraint() {
-  if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*1.5){
+  if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*1.5 && solarSystemMode){
     alert("Try Clicking Around the Sun Instead!");
+    spaceClicked = false;
+  }
+  if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*1.5 && moonMode){
+    alert("Try Clicking Around the Planet Instead!");
     spaceClicked = false;
   }
   if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) > boundaryR/2 && spaceClicked == true){
@@ -473,23 +622,28 @@ function planetOptionsClick() {
 }
 
 function buttonClick() {
-  // if (reverbTrigger == false && dist(mouseX, mouseY, reverbX, reverbY) < reverbR){
-  //   reverbTrigger = true;
-  //   reverb.wet.rampTo(0.5, 0.5);
-  //   spaceClicked = false;
-  // } else if (dist(mouseX, mouseY, reverbX, reverbY) < reverbR) {
-  //   reverbTrigger = false;
-  //   reverb.wet.rampTo(0, 0.5)
-  //   spaceClicked = false;
-  // }
+  if (helpTrigger == false && dist(mouseX, mouseY, helpX, helpY) < helpR){
+    helpTrigger = true;
+    helpMode = true;
+    spaceClicked = false;
+    screenZero = true;
+    helpAlpha = 255*2;
+  } else if (dist(mouseX, mouseY, helpX, helpY) < helpR) {
+    helpTrigger = false;
+    spaceClicked = false;
+    helpAlpha = 100;
+    screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
+  }
   if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
     chorusTrigger = true;
     chorus.depth = 0.8
     spaceClicked = false;
+    chorusAlpha = 255
   } else if (dist(mouseX, mouseY, chorusX, chorusY) < chorusR) {
     chorusTrigger = false;
     chorus.depth = 0
     spaceClicked = false;
+    chorusAlpha = 100;
   }
 }
 
@@ -602,6 +756,7 @@ function planetAdd() {
     planetOptions.push(new Planet(width / 20 - width / 2, p * height/p - height / 2 + height / (p*2) + 1, height/16, planetColours[p]));
     loadSounds(p);
     startSounds(p);
+    newPlanet = true;
   //else re-add from deleted planets bank
   } else {
     oscillators[d].volume.rampTo(-25, 0.05);
@@ -704,7 +859,7 @@ function createTempMoon() {
 function showBin(){
   //bin image
   imageMode(CENTER);
-  image(bin, width/2, height - 20, 30, 30);
+  image(binIcon, width/2, height - 20, 30, 30);
 }
 
 function tempPlanetAngle(){
@@ -779,11 +934,11 @@ class Planet {
     }
   }
   //(TOO CLOSE TO SUN REPLACMENT
-  //TRY clicking aroun planet instead!!
   //MOON ADDED!
   //PLANET ADDED!
   //drag instructions
   //Infromation button as well!
+  //menu bug!!
 
   showOptions(){
     noStroke();
