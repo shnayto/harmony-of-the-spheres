@@ -75,7 +75,8 @@ let tremolos = [];
   let xx = 0
   let xxs = []
   let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR, chorusAlpha = 100;
-  let helpTrigger = false, helpButton, helpX, helpY, helpR, helpAlpha = 100;
+  let helpTrigger = false, helpButton, helpX, helpY, helpR, helpAlpha = 150;
+  let infoTrigger = false, infoX, infoY, infoR, infoAlpha = 150;
 let boundary, boundaryR;
 let newPlanet;
 let screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
@@ -94,7 +95,8 @@ let panner //= new Tone.Panner(xx).toDestination();
 
 function preload() {
   binIcon = loadImage('bin.png');
-  helpIcon = loadImage('help.png');
+  helpIcon = loadImage('help.svg');
+  infoIcon = loadImage('info.svg');
 }
 function setup(){
   createCanvas(windowWidth, windowHeight);
@@ -179,6 +181,7 @@ function draw(){
   if (helpTrigger) {
     helpModeDraw();
   }
+  buttons();
 // sound synthesis + effects control
   timbralProperties();
 // show left hand planets menu
@@ -186,8 +189,6 @@ function draw(){
     planetOptions[i].showOptions();
     options();
   }
-
-  buttons();
   push();
   fill(255, boundaryAlpha);
   stroke(255, 8);
@@ -209,6 +210,9 @@ function draw(){
      //     timer();
      //  }
     }
+  }
+  if (infoTrigger) {
+    infoModeDraw();
   }
 }
 
@@ -354,11 +358,30 @@ function helpModeDraw() {
   }
 }
 
+function infoModeDraw() {
+  fill(50, 245);
+  gradient = rect(0, 0, width, height);
+
+  fill(215, 255);
+  textAlign(CENTER, CENTER);
+  textSize(height/15);
+  text("Harmony of the Spheres is a digital musical instrument which revisits the age-old relationship between music and the cosmos", width/8, height/8, width/2+width/4, height/2 - height/6);
+  textSize(height/22);
+  text("In Ancient Greece, Pythagoras and his followers believed that the motion of each planet produced a musical note. The planets combined to create a divine harmonic instrument. Create your own Harmony of the Spheres in this virtual Solar System", width/8, height/2, width/2+width/4);
+  push();
+  rectMode(CENTER);
+  rect(width/2, height - height/10, width/15, height/20, 10);
+  fill(55);
+  textSize(width/60);
+  text('OKAY!', width/2, height - height/10)
+  pop();
+}
+
 function helpModeClick() {
   if(screenFive && dist(mouseX, mouseY, planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y) < planetOptions[tempPlanetIndex].r) {
     screenFive = false;
     screenSix = true;
-    helpAlpha = 100;
+    helpAlpha = 150;
   }
   if (screenFour) {
     screenFive = true;
@@ -444,16 +467,20 @@ function buttons() {
     chorusR = height/32;
     chorusButton = ellipse(chorusX, chorusY, chorusR*2);
 
-    fill(150, helpAlpha/2);
+    fill(150, infoAlpha);
+    infoX = width - 60;
+    infoY = height/2 + height/3;
+    infoR = height/32;
+    infoButton = ellipse(infoX, infoY, infoR*2);
+    image(infoIcon, infoX, infoY, infoR * 2, infoR * 2);
+
+    fill(150, helpAlpha);
      helpX = width - 60;
      helpY = height - 40;
      helpR = height/32;
      helpButton = ellipse(helpX, helpY, helpR*2);
      imageMode(CENTER);
-     image(helpIcon, helpX, helpY, helpR * 1.5, helpR * 1.5);
-     if (helpTrigger == false){
-       helpButton = ellipse(helpX, helpY, helpR*2);
-     }
+     image(helpIcon, helpX, helpY, helpR * 2, helpR * 2);
 }
 
 
@@ -626,13 +653,20 @@ function buttonClick() {
     helpMode = true;
     spaceClicked = false;
     screenZero = true;
-    helpAlpha = 255*2;
+    helpAlpha = 255;
   } else if (dist(mouseX, mouseY, helpX, helpY) < helpR) {
     helpTrigger = false;
     spaceClicked = false;
-    helpAlpha = 100;
+    helpAlpha = 150;
     boundaryAlpha = 3;
     screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
+  }
+  if (infoTrigger == false && dist(mouseX, mouseY, infoX, infoY) < infoR){
+    infoTrigger = true;
+    spaceClicked = false;
+  } else if (infoTrigger) {
+    infoTrigger = false;
+    spaceClicked = false;
   }
   if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
     chorusTrigger = true;
