@@ -517,7 +517,7 @@ function options() {
 
 function buttons() {
     fill(150, chorusAlpha);
-    chorusX = width - 60;
+    chorusX = width - width/30;
     chorusY = height/2;
     chorusR = height/32;
     if (solarSystemMode || moonMode){
@@ -525,7 +525,7 @@ function buttons() {
     }
 
     fill(150, infoAlpha);
-    infoX = width - 60;
+    infoX = width - width/30;
     infoY = height/2 + height/3;
     infoR = height/32;
     if (solarSystemMode || moonMode){
@@ -534,7 +534,7 @@ function buttons() {
     }
 
     fill(150, helpAlpha);
-     helpX = width - 60;
+     helpX = width - width/30;
      helpY = height - 40;
      helpR = height/32;
      if (solarSystemMode || moonMode){
@@ -867,7 +867,7 @@ function planetAdd() {
 
 function planetOptionsOrganize() {
   for (let i = 0; i < planetOptions.length; i++) {
-     planetOptions[i].pos.x = 30;
+     planetOptions[i].pos.x = width/30;;
      planetOptions[i].pos.y = i * height/planetOptions.length + height / (planetOptions.length*2) + 1;
   }
 }
