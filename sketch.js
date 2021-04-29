@@ -224,10 +224,19 @@ function timbralProperties() {
       let panDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
       partials = round(map(panDistance, 0, width/2, 10, 100));
       oscillators[tempPlanetIndex].modulationType = `square${partials}`;
+      let tremoloDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
+      tremoloMap = map(tremoloDistance, 0, width/2, 0.99, 1.04);
+      oscillators[tempPlanetIndex].harmonicity.value = tremoloMap;
+      let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
+      modulationIndexMap = map(modDistance, 0, width/2, 0, 4);
+      oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
     } else if (moons[tempPlanetIndex].length > 1){
       let tremoloDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
       tremoloMap = map(tremoloDistance, 0, width/2, 0.99, 1.04);
       oscillators[tempPlanetIndex].harmonicity.value = tremoloMap;
+      let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
+      modulationIndexMap = map(modDistance, 0, width/2, 0, 4);
+      oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
       oscillators[tempPlanetIndex].modulationType = `square${10}`;
     } else if (moons[tempPlanetIndex].length > 0){
       let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
