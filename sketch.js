@@ -386,6 +386,8 @@ function infoModeDraw() {
   pop();
 }
 
+let helpCount = 0;
+
 function helpModeClick() {
   if(screenFive && dist(mouseX, mouseY, planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y) < planetOptions[tempPlanetIndex].r) {
     screenFive = false;
@@ -393,10 +395,15 @@ function helpModeClick() {
     helpAlpha = 150;
   }
   if (screenFour) {
-    screenFive = true;
-    screenFour = false;
+    helpCount++
+    if (helpCount > 1){
+      screenFive = true;
+      screenFour = false;
+    }
   }
-  if (screenThree && spaceClicked) {
+  if (screenThree &&
+    dist(mouseX, mouseY, width/2, height/2) < boundaryR/2 &&
+    dist(mouseX, mouseY, width/2, height/2) > sun.r) {
     screenFour = true;
     screenThree = false;
   }
@@ -411,7 +418,10 @@ function helpModeClick() {
   if (screenOne && spaceClicked && moonMode) {
     screenOne = true;
   }
-  if (screenOne && spaceClicked && solarSystemMode) {
+  if (screenOne && solarSystemMode &&
+    dist(mouseX, mouseY, width/2, height/2) < boundaryR/2 &&
+    dist(mouseX, mouseY, width/2, height/2) > sun.r*1.5) {
+    console.log(boundaryR);
     screenTwo = true;
     screenOne = false;
   }
@@ -598,7 +608,7 @@ function touchStarted() {
 }
 
 function touchEnded() {
-  if (solarSystemMode) {
+  if (solarSystemMode && helpTrigger == false) {
     planetReleased();
     spaceClicked = true;
   } else {
@@ -623,7 +633,7 @@ function constraint() {
     spaceClicked = false;
   }
   if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) > boundaryR/2 && spaceClicked == true){
-    alert("Out of Bounds!");
+    //alert("Out of Bounds!");
     spaceClicked = false;
   }
 }
