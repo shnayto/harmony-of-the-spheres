@@ -303,7 +303,8 @@ function helpModeDraw() {
       strokeWeight(1);
       ellipse(planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y, planetOptions[tempPlanetIndex].r + 10 + (i + 1))
     }
-  } else if (screenOne){
+  }
+  if (screenOne && solarSystemMode){
     fill(255)
     text('Touch to Add More Planets to the Solar System', width/2, height/4);
     noFill();
@@ -372,7 +373,7 @@ function infoModeDraw() {
   rect(width/2, height - height/10, width/15, height/20, 10);
   fill(55);
   textSize(width/60);
-  text('Okay!', width/2, height - height/10)
+  text('OK!', width/2, height - height/10)
   pop();
 }
 
@@ -398,7 +399,10 @@ function helpModeClick() {
       }
     }
   }
-  if (screenOne && spaceClicked) {
+  if (screenOne && spaceClicked && moonMode) {
+    screenOne = true;
+  }
+  if (screenOne && spaceClicked && solarSystemMode) {
     screenTwo = true;
     screenOne = false;
   }
@@ -429,6 +433,7 @@ function freqModBodge() {
     }
 }
 
+let alertCount = 0;
 function moonModeDraw() {
   textSize(height/30)
   fill(255, 150);
@@ -443,7 +448,12 @@ function moonModeDraw() {
       if (moons[tempPlanetIndex][i].pos.x > width*1.2 || moons[tempPlanetIndex][i].pos.x < -20
       || moons[tempPlanetIndex][i].pos.y > height*1.2 || moons[tempPlanetIndex][i].pos.y < -20){
         moons[tempPlanetIndex].splice(i, 1);
+        alertCount++;
+        if (alertCount == 2) {
+          alert('If a moon is too close to a planet, it will slingshot away!')
+        }
       }
+
    }
    if (dragging == false) {
      for (i = 0; i < moons[tempPlanetIndex].length; i++) {
@@ -575,9 +585,7 @@ function touchStarted() {
     if (spaceClicked && moonMode) {
       moonAdd();
     }
-    if (started == true) {
-      return false;
-    }
+    return false;
 }
 
 function touchEnded() {
