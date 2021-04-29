@@ -218,29 +218,28 @@ function draw(){
 
 function timbralProperties() {
   //map tremolo to second moon
-  if (moons[tempPlanetIndex].length > 1){
-    let tremoloDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
-    tremoloMap = map(tremoloDistance, 0, width/2, 0.99, 1.04)
-    }
   //map chorus to third moon
-  if (moons[tempPlanetIndex].length > 2){
-    let panDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
-    partials = round(map(panDistance, 0, width/2, 10, 100));
+  if (moonMode){
+    if (moons[tempPlanetIndex].length > 2){
+      let panDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
+      partials = round(map(panDistance, 0, width/2, 10, 100));
+      oscillators[tempPlanetIndex].modulationType = `square${partials}`;
+    } else if (moons[tempPlanetIndex].length > 1){
+      let tremoloDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
+      tremoloMap = map(tremoloDistance, 0, width/2, 0.99, 1.04);
+      oscillators[tempPlanetIndex].harmonicity.value = tremoloMap;
+      oscillators[tempPlanetIndex].modulationType = `square${10}`;
+    } else if (moons[tempPlanetIndex].length > 0){
+      let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
+      modulationIndexMap = map(modDistance, 0, width/2, 0, 4);
+      oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+      oscillators[tempPlanetIndex].modulationType = `square${10}`;
+      oscillators[tempPlanetIndex].harmonicity.value = 1;
+    } else if (moons[tempPlanetIndex].length == 0){
+      oscillators[tempPlanetIndex].modulationIndex.value = 0;
+      oscillators[tempPlanetIndex].modulationType = `square${10}`;
+      oscillators[tempPlanetIndex].harmonicity.value = 1;
     }
-  //map modulation index to first moon
-  if (moons[tempPlanetIndex].length > 0){
-    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, width/2, 0, 4);
-  }
-  //assign mappings to values
-  if (moons[tempPlanetIndex].length > 0) {
-    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
-    oscillators[tempPlanetIndex].harmonicity.value = tremoloMap;
-    oscillators[tempPlanetIndex].modulationType = `square${partials}`;
-    //console.log(oscillators[tempPlanetIndex].modulationType);
-    //panners[tempPlanetIndex].feedback.value = panMap;
-    //panners[tempPlanetIndex].depth = panMap;
-    //tremolos[tempPlanetIndex].decay.value = tremoloMap;
   }
 }
 
@@ -364,8 +363,8 @@ function infoModeDraw() {
 
   fill(215, 255);
   textAlign(CENTER, CENTER);
-  textSize(height/15);
-  text("Harmony of the Spheres is a digital musical instrument which revisits the age-old relationship between music and the cosmos", width/8, height/8, width/2+width/4, height/2 - height/6);
+  textSize(height/16);
+  text("Harmony of the Spheres is a digital musical instrument which revisits the age-old relationship between music and the cosmos", width/8, height/8, width/2 + width/4);
   textSize(height/22);
   text("In Ancient Greece, Pythagoras and his followers believed that the motion of each planet produced a musical note. The planets combined to create a divine harmonic instrument. Create your own Harmony of the Spheres in this virtual Solar System", width/8, height/2, width/2+width/4);
   push();
@@ -373,7 +372,7 @@ function infoModeDraw() {
   rect(width/2, height - height/10, width/15, height/20, 10);
   fill(55);
   textSize(width/60);
-  text('OKAY!', width/2, height - height/10)
+  text('Okay!', width/2, height - height/10)
   pop();
 }
 
@@ -440,10 +439,37 @@ function moonModeDraw() {
   ellipse(sun.pos.x, sun.pos.y, sun.r*2);
   //move, show and apply gravitational force to moons
    for (i = 0; i < moons[tempPlanetIndex].length; i++) {
-       moons[tempPlanetIndex][i].show();
+      moons[tempPlanetIndex][i].show();
+      if (moons[tempPlanetIndex][i].pos.x > width*1.2 || moons[tempPlanetIndex][i].pos.x < -20
+      || moons[tempPlanetIndex][i].pos.y > height*1.2 || moons[tempPlanetIndex][i].pos.y < -20){
+        moons[tempPlanetIndex].splice(i, 1);
+      }
+   }
+   if (dragging == false) {
+     for (i = 0; i < moons[tempPlanetIndex].length; i++) {
        moons[tempPlanetIndex][i].move();
        sun.attract(moons[tempPlanetIndex][i]);
+     }
+   } else if (moons[tempPlanetIndex].length == 3){
+       let tempMoonArray = [0, 1, 2];
+       tempMoonArray.splice(tempMoonIndex, 1);
+       for (i = 0; i < tempMoonArray.length; i++) {
+         moons[tempPlanetIndex][tempMoonArray[i]].move();
+         sun.attract(moons[tempPlanetIndex][tempMoonArray[i]]);
+       }
+   } else if (moons[tempPlanetIndex].length == 2) {
+        let tempMoonArray = [0, 1];
+        tempMoonArray.splice(tempMoonIndex, 1);
+        moons[tempPlanetIndex][tempMoonArray[0]].move();
+        sun.attract(moons[tempPlanetIndex][tempMoonArray[0]]);
    }
+   if (dragging){
+     showBin();
+   }
+   if (tempMoon){
+     moons[tempPlanetIndex][tempMoonIndex].pos.x = mouseX - xOffset;
+     moons[tempPlanetIndex][tempMoonIndex].pos.y = mouseY - yOffset;
+  }
 }
 
 function options() {
@@ -465,22 +491,28 @@ function buttons() {
     chorusX = width - 60;
     chorusY = height/2;
     chorusR = height/32;
-    chorusButton = ellipse(chorusX, chorusY, chorusR*2);
+    if (solarSystemMode || moonMode){
+      chorusButton = ellipse(chorusX, chorusY, chorusR*2);
+    }
 
     fill(150, infoAlpha);
     infoX = width - 60;
     infoY = height/2 + height/3;
     infoR = height/32;
-    infoButton = ellipse(infoX, infoY, infoR*2);
-    image(infoIcon, infoX, infoY, infoR * 2, infoR * 2);
+    if (solarSystemMode || moonMode){
+      infoButton = ellipse(infoX, infoY, infoR*2);
+      image(infoIcon, infoX, infoY, infoR * 2, infoR * 2);
+    }
 
     fill(150, helpAlpha);
      helpX = width - 60;
      helpY = height - 40;
      helpR = height/32;
-     helpButton = ellipse(helpX, helpY, helpR*2);
-     imageMode(CENTER);
-     image(helpIcon, helpX, helpY, helpR * 2, helpR * 2);
+     if (solarSystemMode || moonMode){
+       helpButton = ellipse(helpX, helpY, helpR*2);
+       imageMode(CENTER);
+       image(helpIcon, helpX, helpY, helpR * 2, helpR * 2);
+     }
 }
 
 
@@ -500,9 +532,8 @@ function mouseDragged(){
   if (moonMode && dragging == true){
     for (let i = 0; i < moons[tempPlanetIndex].length; i++){
       if (dist(mouseX, mouseY, moons[tempPlanetIndex][i].pos.x, moons[tempPlanetIndex][i].pos.y) < moons[tempPlanetIndex][i].r){
-        moons[tempPlanetIndex][i].pos.x = mouseX - xOffset;
-        moons[tempPlanetIndex][i].pos.y = mouseY - yOffset;
         tempMoon = true;
+        tempMoonIndex = i;
       }
     }
   }
@@ -515,6 +546,11 @@ function timer() {
 }
 
 function touchStarted() {
+// if a button on the right is clicked
+    if (started == true){
+      buttonClick();
+      helpModeClick();
+    }
 //begin interface with touch
   Tone.start();
     if (started == false) {
@@ -530,12 +566,9 @@ function touchStarted() {
     planetClick();
 // if a moon is clicked
     moonClick();
-// if a button on the right is clicked
-    buttonClick();
 // if sun is clicked, do not add planet as it otherwise flies away
     constraint();
 // if a random space is touched, add planet or moon
-    helpModeClick();
     if (spaceClicked && planets.length < 8 && solarSystemMode) {
       planetAdd();
     }
@@ -570,10 +603,6 @@ function timerDrag() {
 function constraint() {
   if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*1.5 && solarSystemMode){
     alert("Try Clicking Around the Sun Instead!");
-    spaceClicked = false;
-  }
-  if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) < sun.r*1.5 && moonMode){
-    alert("Try Clicking Around the Planet Instead!");
     spaceClicked = false;
   }
   if (dist(mouseX, mouseY, sun.pos.x, sun.pos.y) > boundaryR/2 && spaceClicked == true){
@@ -614,7 +643,7 @@ function moonClick() {
 function planetOptionsClick() {
   let tempPlanetOptionsIndex
   for (let i = 0; i < planetOptions.length; i++){
-    if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && tempPlanetIndex == i){
+    if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r && tempPlanetIndex == i && moonMode){
       moonMode = false;
       solarSystemMode = true;
       spaceClicked = false;
@@ -698,6 +727,7 @@ function moonReleased() {
       resetMoon();
   }
   spaceClicked = false;
+  dragging = false;
 }
 
 function resetPlanet() {
@@ -725,7 +755,6 @@ function resetMoon() {
   moons[tempPlanetIndex][tempMoonIndex].vel.y = cos(angleNewPlanet) * eccentricityNewPlanet;
 
   //moons[tempPlanetIndex].push(new Planet(mouseX - xOffset, mouseY - yOffset, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
-  console.log(moons[tempPlanetIndex][tempMoonIndex].angle)
 }
 
 function planetDelete() {
@@ -770,7 +799,7 @@ function planetOrderLogger() {
 }
 
 function moonDelete() {
-  moons[tempPlanetIndex].splice(tempMoonIndex, 0);
+  moons[tempPlanetIndex].splice(tempMoonIndex, 1);
   tempMoon = false;
 }
 
@@ -876,20 +905,6 @@ function createTempPlanet(){
   ellipse(mouseX - xOffset, mouseY - yOffset, tempPlanetSpecs[0] + pulsing*5);
 }
 
-function createTempMoon() {
-  showBin();
-  //temp moon pulses
-  let pulsing = sin(pulse += 0.05);
-  //if moon is in bin change colour to red, else remain as is
-  if (mouseY > height - height/10){
-    fill(255, 0, 0, 50);
-  } else {
-  fill(moonColours[0], moonColours[1], moonColours[2]);
-  }
-  //temp moon
-  ellipse(mouseX - xOffset, mouseY - yOffset, planetRadii[2]*2 + pulsing*5);
-}
-
 function showBin(){
   //bin image
   imageMode(CENTER);
@@ -967,9 +982,6 @@ class Planet {
       ellipse(this.pos.x + cos(this.angle2) * (i + 1), this.pos.y - sin(this.angle2) * (i + 1), this.r - (2 * (i + 1)));
     }
   }
-  //(TOO CLOSE TO SUN REPLACMENT
-  //Infromation button as well!
-  //menu bug!!
 
   showOptions(){
     noStroke();
