@@ -275,11 +275,11 @@ function solarSystemDraw() {
     planets[i].angleFind();
     sun.attract(planets[i]);
 //REALLY BUGGY HOMIE
-    if (planets[i].pos.x > width || planets[i].pos.x < 0) {
-      planetOutOfBounds();
-    } else if (planets[i].pos.y > height || planets[i].pos.y < 0) {
-      planetOutOfBounds();
-    }
+    // if (planets[i].pos.x > width || planets[i].pos.x < 0) {
+    //   planetOutOfBounds();
+    // } else if (planets[i].pos.y > height || planets[i].pos.y < 0) {
+    //   planetOutOfBounds();
+    // }
     //console.log(freq);
   //xxs[i] = planets[i].pos.x - width/2;
   //console.log(xx);
@@ -847,6 +847,7 @@ function planetReleased() {
       //planetDelete();
       //tempPlanetSpecs.length = 0;
       console.log('delete function temporarily disabled due to bugs!')
+      resetPlanet();
   } else if (tempPlanet == true) {
       resetPlanet();
   }
@@ -1029,15 +1030,15 @@ function startSounds(p) {
 }
 
 function createTempPlanet(){
-  showBin();
+  // showBin();
   //temp planet pulses
   let pulsing = sin(pulse += 0.05);
-  //if planet is in bin change colour to red, else remain as is
-  if (mouseY > height - height/10){
-    fill(255, 0, 0, 50);
-  } else {
+  // //if planet is in bin change colour to red, else remain as is
+  // if (mouseY > height - height/10){
+  //   fill(255, 0, 0, 50);
+  // } else {
   fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2], 100)
-  }
+  // }
   //temp planet
   ellipse(mouseX - xOffset, mouseY - yOffset, tempPlanetSpecs[0] + pulsing*5);
 }
