@@ -5,6 +5,7 @@
 
 let sun, planets = [], radii = [], moons = [[], [], [], [], [], [], [], []], e = [15.36, 14.01, 12.98, 12.14, 11.45, 10.86, 10.35, /*this is random*/ 10.15] /*15.36*/, planetRadii = [10, 15, 25, 20, 40, 35, 30, 27],
 planetColours = [[233, 163, 100], [216, 157, 145], [15, 92, 166], [191, 54, 27], [143, 105, 64], [217, 177, 56], [121, 183, 224], [38, 104, 148]], moonColours = [175, 174, 175];
+let planetNames = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune']
 let tempPlanetSpecs = [];
 let deletedPlanets = [];
 let deletedIndices = [];
@@ -74,9 +75,10 @@ let tremolos = [];
   let partials = 10;
   let xx = 0
   let xxs = []
-  let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR, chorusAlpha = 100;
-  let helpTrigger = false, helpButton, helpX, helpY, helpR, helpAlpha = 150;
-  let infoTrigger = false, infoX, infoY, infoR, infoAlpha = 150;
+  let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR, chorusAlpha = 10;
+  let reverbValue = 0, reverbTrigger = false, reverbButton, reverbX, reverbY, reverbR, reverbAlpha = 100, reverbFade;
+  let helpTrigger = false, helpButton, helpX, helpY, helpR, helpAlpha = 100;
+  let infoTrigger = false, infoX, infoY, infoR, infoAlpha = 100;
 let boundary, boundaryR;
 let newPlanet;
 let screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
@@ -97,6 +99,7 @@ function preload() {
   binIcon = loadImage('bin.png');
   helpIcon = loadImage('help.svg');
   infoIcon = loadImage('info.svg');
+  buttonBorder = loadImage('buttonBorder.svg');
 }
 function setup(){
   createCanvas(windowWidth, windowHeight);
@@ -131,7 +134,12 @@ function graphics(){
   textSize(height/35);
   textAlign(CENTER, CENTER);
   textFont('Georgia');
-  welcomeText = text("Touch to Begin", width/2, height/2.5);
+  welcomeText = text("Please Use Headphones", width/2, height/2.9);
+  push();
+  stroke(255, fade);
+  line(width/2 - width/10, height/2.7, width/2 + width/10, height/2.7);
+  pop();
+  welcomeText = text("Touch Around the Sun to Begin", width/2, height/2.5);
   textSize(width/15);
   titleText = text("Harmony of the Spheres", width/2, height/4);
 }
@@ -182,6 +190,7 @@ function draw(){
     helpModeDraw();
   }
   buttons();
+  buttonsHighlight();
 // sound synthesis + effects control
   timbralProperties();
 // show left hand planets menu
@@ -386,13 +395,46 @@ function infoModeDraw() {
   pop();
 }
 
+function buttonsHighlight() {
+  if (started){
+    push();
+    textAlign(RIGHT, CENTER);
+    fill(255, 150);
+    if (dist(mouseX, mouseY, helpX, helpY) < helpR){
+      helpAlpha = 255;
+      text('Help', helpX - helpR*1.3, helpY);
+    } else if (helpTrigger == false && dist(mouseX, mouseY, helpX, helpY) > helpR) {
+      helpAlpha = 100;
+    }
+    if (dist(mouseX, mouseY, infoX, infoY) < infoR){
+      infoAlpha = 255;
+      text('Info', infoX - infoR*1.3, infoY);
+    } else if (dist(mouseX, mouseY, infoX, infoY) > infoR) {
+      infoAlpha = 100;
+    }
+    if (dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
+      chorusAlpha = 255;
+      text('Chorus', chorusX - chorusR*1.3, chorusY);
+    } else if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) > chorusR) {
+      chorusAlpha = 100;
+    }
+    if (dist(mouseX, mouseY, reverbX, reverbY) < reverbR){
+      reverbAlpha = 255
+      text('Stereo Reverb', reverbX - reverbR*1.3, reverbY);
+    } else if (reverbTrigger == false && dist(mouseX, mouseY, reverbX, reverbY) > reverbR) {
+      reverbAlpha = 100;
+    }
+    pop();
+  }
+}
+
 let helpCount = 0;
 
 function helpModeClick() {
   if(screenFive && dist(mouseX, mouseY, planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y) < planetOptions[tempPlanetIndex].r) {
     screenFive = false;
     screenSix = true;
-    helpAlpha = 150;
+    helpAlpha = 100;
   }
   if (screenFour) {
     helpCount++
@@ -457,13 +499,14 @@ function moonModeDraw() {
   textSize(height/30)
   fill(255, 150);
   textAlign(CENTER, CENTER);
-  text("Planet Mode", width/2, 30);
+  text(planetNames[tempPlanetIndex], width/2, 30);
   //replace sun with selected planet
   fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2]);
   ellipse(sun.pos.x, sun.pos.y, sun.r*2);
   //move, show and apply gravitational force to moons
    for (i = 0; i < moons[tempPlanetIndex].length; i++) {
       moons[tempPlanetIndex][i].show();
+      moons[tempPlanetIndex][i].glow();
       if (moons[tempPlanetIndex][i].pos.x > width*1.2 || moons[tempPlanetIndex][i].pos.x < -20
       || moons[tempPlanetIndex][i].pos.y > height*1.2 || moons[tempPlanetIndex][i].pos.y < -20){
         moons[tempPlanetIndex].splice(i, 1);
@@ -506,6 +549,12 @@ function options() {
   for (let i = 0; i < planetOptions.length; i++){
     if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
       planetOptions[i].optionAlpha = 150;
+      if (helpTrigger == false){
+        push();
+        textAlign(LEFT, CENTER);
+        text(planetNames[i], planetOptions[i].pos.x + planetOptions[i].r/2*1.3, planetOptions[i].pos.y);
+        pop();
+      }
     } else if (moonMode) {
       planetOptions[tempPlanetIndex].optionAlpha = 150;
       planetOptions[i].optionAlpha = 50;
@@ -515,19 +564,65 @@ function options() {
   }
 }
 
+var offset = 0;
+
 function buttons() {
     fill(150, chorusAlpha);
     chorusX = width - width/30;
-    chorusY = height/2;
-    chorusR = height/32;
+    chorusY = height/12;
+    chorusR = height/25;
     if (solarSystemMode || moonMode){
       chorusButton = ellipse(chorusX, chorusY, chorusR*2);
+      image(buttonBorder, chorusX, chorusY, chorusR * 2, chorusR * 2);
+      push();
+      stroke(255);
+      strokeWeight(2.5);
+      noFill();
+      beginShape();
+      //vertex(chorusX-chorusR, chorusY);
+      for(var x = chorusX-chorusR*0.7; x < chorusX+chorusR*0.7; x++){
+        //var angle = map(x, 0, width, 0, TWO_PI);
+        var angle = offset + x * 0.3;
+        // map x between 0 and width to 0 and Two Pi
+        var y = map(sin(angle), -2, 2, chorusY-chorusR, chorusY+chorusR);
+        vertex(x, y);
+      }
+      //vertex(chorusX+chorusR, chorusY);
+      endShape();
+      if (chorusTrigger){
+        offset += 0.1;
+      } else {
+        offset = offset;
+      }
+      pop();
+    }
+
+    fill(150, reverbAlpha);
+    reverbX = width - width/30;
+    reverbY = height/9*2;
+    reverbR = height/25;
+    if (solarSystemMode || moonMode){
+      reverbButton = ellipse(reverbX, reverbY, reverbR*2);
+      image(buttonBorder, reverbX, reverbY, reverbR * 2, reverbR * 2);
+      push();
+      noFill();
+      stroke(255);
+      strokeWeight(2.5);
+      if (reverbTrigger == false){
+        ellipse(reverbX, reverbY, reverbR)
+      } else {
+        ellipse(reverbX-reverbR/4, reverbY, reverbR/2)
+        ellipse(reverbX+reverbR/4, reverbY, reverbR/2)
+
+      }
+      pop();
+
     }
 
     fill(150, infoAlpha);
     infoX = width - width/30;
-    infoY = height/2 + height/3;
-    infoR = height/32;
+    infoY = height - height/9*2;
+    infoR = height/25;
     if (solarSystemMode || moonMode){
       infoButton = ellipse(infoX, infoY, infoR*2);
       image(infoIcon, infoX, infoY, infoR * 2, infoR * 2);
@@ -535,8 +630,8 @@ function buttons() {
 
     fill(150, helpAlpha);
      helpX = width - width/30;
-     helpY = height - 40;
-     helpR = height/32;
+     helpY = height - height/12;
+     helpR = height/25;
      if (solarSystemMode || moonMode){
        helpButton = ellipse(helpX, helpY, helpR*2);
        imageMode(CENTER);
@@ -704,43 +799,54 @@ function planetOptionsClick() {
 }
 
 function buttonClick() {
-  if (helpTrigger == false && dist(mouseX, mouseY, helpX, helpY) < helpR){
+  if (helpTrigger == false && dist(mouseX, mouseY, helpX, helpY) < helpR*2){
     helpTrigger = true;
     helpMode = true;
     spaceClicked = false;
     screenZero = true;
     helpAlpha = 255;
-  } else if (dist(mouseX, mouseY, helpX, helpY) < helpR) {
+  } else if (dist(mouseX, mouseY, helpX, helpY) < helpR*2) {
     helpTrigger = false;
     spaceClicked = false;
-    helpAlpha = 150;
     boundaryAlpha = 3;
     screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
   }
-  if (infoTrigger == false && dist(mouseX, mouseY, infoX, infoY) < infoR){
+  if (infoTrigger == false && dist(mouseX, mouseY, infoX, infoY) < infoR*2){
     infoTrigger = true;
     spaceClicked = false;
   } else if (infoTrigger) {
     infoTrigger = false;
     spaceClicked = false;
   }
-  if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
+  if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR*2){
     chorusTrigger = true;
-    chorus.depth = 0.8
+    chorus.frequency.value = 2;
     spaceClicked = false;
     chorusAlpha = 255
-  } else if (dist(mouseX, mouseY, chorusX, chorusY) < chorusR) {
+  } else if (dist(mouseX, mouseY, chorusX, chorusY) < chorusR*2) {
     chorusTrigger = false;
-    chorus.depth = 0
+    chorus.frequency.value = 0;
     spaceClicked = false;
-    chorusAlpha = 100;
+  }
+  if (reverbTrigger == false && dist(mouseX, mouseY, reverbX, reverbY) < reverbR*2){
+    reverbTrigger = true;
+    reverb.wet.rampTo(0.7, 0.5);
+    spaceClicked = false;
+    reverbAlpha = 255
+  } else if (dist(mouseX, mouseY, reverbX, reverbY) < reverbR*2) {
+    reverbTrigger = false;
+    reverb.wet.rampTo(0.01, 0.5);
+    //reverb.decay.rampTo(0.01, 1);
+    spaceClicked = false;
   }
 }
 
+
 function planetReleased() {
   if (tempPlanet == true && mouseY > height - height/10) {
-      planetDelete();
-      tempPlanetSpecs.length = 0;
+      //planetDelete();
+      //tempPlanetSpecs.length = 0;
+      console.log('delete function temporarily disabled due to bugs!')
   } else if (tempPlanet == true) {
       resetPlanet();
   }
@@ -882,7 +988,11 @@ function moonAdd() {
     moons[tempPlanetIndex].push(new Planet(mouseX, mouseY, planetRadii[2] * 2, moonColours, eccentricityNewPlanet, angleNewPlanet));
   }
 }
-let chorus = new Tone.Chorus(2, 1.5, 0).toDestination().start();
+let chorus = new Tone.Chorus(0, 1, 1).toDestination().start();
+let reverb = new Tone.Reverb({
+  decay: 6.8,
+  wet: 0
+}).toDestination();
 // let reverb = new Tone.Freeverb({
 //   decay: 2,
 //   wet: 0
@@ -909,7 +1019,7 @@ function startSounds(p) {
   //oscillators[p].connect(tremolos[p]);
 
   //oscillators[p].connect(chorus);
-  oscillators[p].connect(chorus);
+  oscillators[p].chain(reverb, chorus);
   //oscillators[p].connect(reverb);
 
 
@@ -1007,6 +1117,14 @@ class Planet {
     for (let i = 0; i < 5; i++){
       fill(this.c[0]-5 * (i + 1), this.c[1]-5 * (i + 1), this.c[2]-5 * (i + 1), 40);
       ellipse(this.pos.x + cos(this.angle2) * (i + 1), this.pos.y - sin(this.angle2) * (i + 1), this.r - (2 * (i + 1)));
+    }
+  }
+
+  glow() {
+    //adds a healthy glow around moons
+    for (let i = 0; i < 15; i++){
+      fill(moonColours[0], moonColours[0], moonColours[0], 5);
+      ellipse(this.pos.x, this.pos.y, this.r + i)
     }
   }
 
