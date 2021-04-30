@@ -75,7 +75,7 @@ let tremolos = [];
   let partials = 10;
   let xx = 0
   let xxs = []
-  let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR, chorusAlpha = 10;
+  let chorusValue = 0, chorusTrigger = false, chorusButton, chorusX, chorusY, chorusR, chorusAlpha = 100;
   let reverbValue = 0, reverbTrigger = false, reverbButton, reverbX, reverbY, reverbR, reverbAlpha = 100, reverbFade;
   let helpTrigger = false, helpButton, helpX, helpY, helpR, helpAlpha = 100;
   let infoTrigger = false, infoX, infoY, infoR, infoAlpha = 100;
@@ -83,6 +83,7 @@ let boundary, boundaryR;
 let newPlanet;
 let screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
 let boundaryAlpha = 3;
+let hoverClick = false;
 
 const channel = new Tone.Channel({
   volume: 0
@@ -190,7 +191,7 @@ function draw(){
     helpModeDraw();
   }
   buttons();
-  buttonsHighlight();
+  //buttonsHighlight();
 // sound synthesis + effects control
   timbralProperties();
 // show left hand planets menu
@@ -499,7 +500,7 @@ function moonModeDraw() {
   textSize(height/30)
   fill(255, 150);
   textAlign(CENTER, CENTER);
-  text(planetNames[tempPlanetIndex], width/2, 30);
+  text('Planet Mode', width/2, 30);
   //replace sun with selected planet
   fill(tempPlanetSpecs[1][0], tempPlanetSpecs[1][1], tempPlanetSpecs[1][2]);
   ellipse(sun.pos.x, sun.pos.y, sun.r*2);
@@ -548,15 +549,22 @@ function options() {
   //applies alpha to planets menu if hovering when using mouse
   for (let i = 0; i < planetOptions.length; i++){
     if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
-      planetOptions[i].optionAlpha = 150;
       if (helpTrigger == false){
+        planetOptions[i].optionAlpha = 150;
         push();
         textAlign(LEFT, CENTER);
-        text(planetNames[i], planetOptions[i].pos.x + planetOptions[i].r/2*1.3, planetOptions[i].pos.y);
+        if (hoverClick == false) {
+          text(planetNames[i], planetOptions[i].pos.x + planetOptions[i].r/2*1.3, planetOptions[i].pos.y);
+        }
+        if (hoverClick) {
+          planetOptions[i].optionAlpha = 50;
+        }
         pop();
       }
     } else if (moonMode) {
-      planetOptions[tempPlanetIndex].optionAlpha = 150;
+      if (hoverClick == false) {
+        planetOptions[tempPlanetIndex].optionAlpha = 150;
+      }
       planetOptions[i].optionAlpha = 50;
     } else {
       planetOptions[i].optionAlpha = 50;
@@ -609,7 +617,7 @@ function buttons() {
       stroke(255);
       strokeWeight(2.5);
       if (reverbTrigger == false){
-        ellipse(reverbX, reverbY, reverbR)
+        ellipse(reverbX, reverbY, reverbR/1.5)
       } else {
         ellipse(reverbX-reverbR/4, reverbY, reverbR/2)
         ellipse(reverbX+reverbR/4, reverbY, reverbR/2)
@@ -684,6 +692,7 @@ function touchStarted() {
       Tone.start();
       solarSystemMode = true;
     }
+    hoverClick = false;
 // if a planet on the left menu is clicked
     planetOptionsClick();
 // if a planet is clicked
@@ -772,6 +781,7 @@ function planetOptionsClick() {
       //maybe this'll need fixing, deleting values for specific moon mode
       tremoloMap = 1;
       partials = 10;
+      hoverClick = true;
       for (var o = 0; o < planets.length; o++) {
           oscillators[planets[o].number].volume.rampTo(-25, 0.05);
       }
@@ -809,6 +819,7 @@ function buttonClick() {
     helpTrigger = false;
     spaceClicked = false;
     boundaryAlpha = 3;
+    helpAlpha = 100;
     screenZero = false, screenOne = false, screenTwo = false, screenThree = false, screenFour = false, screenFive = false, screenSix = false;
   }
   if (infoTrigger == false && dist(mouseX, mouseY, infoX, infoY) < infoR*2){
@@ -827,6 +838,7 @@ function buttonClick() {
     chorusTrigger = false;
     chorus.frequency.value = 0;
     spaceClicked = false;
+    chorusAlpha = 100;
   }
   if (reverbTrigger == false && dist(mouseX, mouseY, reverbX, reverbY) < reverbR*2){
     reverbTrigger = true;
@@ -838,6 +850,8 @@ function buttonClick() {
     reverb.wet.rampTo(0.01, 0.5);
     //reverb.decay.rampTo(0.01, 1);
     spaceClicked = false;
+    reverbAlpha = 100
+
   }
 }
 
