@@ -3,7 +3,7 @@
 
 //visuals
 
-let sun, planets = [], radii = [], moons = [[], [], [], [], [], [], [], []], e = [15.36, 14.01, 12.98, 12.14, 11.45, 10.86, 10.35, /*this is random*/ 10.15] /*15.36*/, planetRadii = [10, 15, 25, 20, 40, 35, 30, 27],
+let sun, planets = [], radii = [], moons = [[], [], [], [], [], [], [], []], e = [15.36, 14.01, 12.98, 12.14, 11.45, 10.86, 10.35, 10.15] /*15.36*/, planetRadii = [10, 15, 25, 20, 40, 35, 30, 27],
 planetColours = [[233, 163, 100], [216, 157, 145], [15, 92, 166], [191, 54, 27], [143, 105, 64], [217, 177, 56], [121, 183, 224], [38, 104, 148]], moonColours = [175, 174, 175];
 let planetNames = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune']
 let tempPlanetSpecs = [];
@@ -106,10 +106,10 @@ function setup(){
   createCanvas(windowWidth, windowHeight);
   planetNumber = -1;
   //pixelDensity(1);
-  sun = new Sun(width/2, height/2);
   for (let i = 0; i < width/30; i++) {
     stars[i] = new Star(random(0, width), random(0, height), random(1, 2));
-  }
+  };
+  sun = new Sun(width/2, height/2);
 }
 
 function startScreen() {
@@ -1195,3 +1195,4 @@ class Star {
     ellipse(this.x, this.y, this.r*2);
   }
 }
+
