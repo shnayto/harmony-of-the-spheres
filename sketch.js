@@ -811,7 +811,7 @@ function planetAdd() {
   // }
 
   //reorganizes planets menu button on the left hand side
-  //planetOptionsOrganize();
+  planetOptionsOrganize();
 }
 function moonAdd() {
   let moonNumber = moons.length;
