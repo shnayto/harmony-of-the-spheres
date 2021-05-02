@@ -1,8 +1,11 @@
-// // Harmony of the Spheres v1.0
-// // Nathan Ó Maoilearca 2021
+//// Harmony of the Spheres v1.0
+//// Nathan Ó Maoilearca 2021
 
+////////////////////////////////
+////////// VARIABLES ///////////
+////////////////////////////////
 
-/////VISUALS/////
+/////VISUAL/////
 
 //Core Elements
 let sun, planets = [], moons = [[], [], [], [], [], [], [], []], stars = [];
@@ -43,7 +46,7 @@ let helpTrigger = false, helpButton, helpX, helpY, helpR, helpAlpha = 100;
 let infoTrigger = false, infoButton, infoX, infoY, infoR, infoAlpha = 100;
 
 
-/////SOUNDS/////
+/////SOUND/////
 
 //A major7     A    E       A    C#      G#     E       A    A
 let pitches = [110, 164.81, 220, 277.18, 415.3, 659.25, 880, 55];
@@ -59,22 +62,20 @@ let reverb = new Tone.Reverb({
   wet: 0
 }).toDestination();
 
-//In Case of an Error, Display this Message
-window.onerror = function() {
-    alert("Oh no, an error occurred! Try refresh the page.")
-}
-
 ////////////////////////////////
 //////////// SETUP /////////////
 ////////////////////////////////
 
+//In Case of an Error, Display this Message
+window.onerror = function() {
+    alert("Oh no, an error occurred! Try refresh the page.")
+}
 function preload() {
   binIcon = loadImage('icons/bin.png');
   helpIcon = loadImage('icons/help.svg');
   infoIcon = loadImage('icons/info.svg');
   buttonBorder = loadImage('icons/buttonBorder.svg');
 }
-
 function setup(){
 //canvas adjusts to any screen size
   createCanvas(windowWidth, windowHeight);
