@@ -1,5 +1,5 @@
-//// Harmony of the Spheres v1.0
-//// Nathan Ó Maoilearca 2021
+//// Harmony of the Spheres v1.0 ////
+///// Nathan Ó Maoilearca 2021 //////
 
 ////////////////////////////////
 ////////// VARIABLES ///////////
@@ -36,7 +36,7 @@ let hoverClick = false;
 let planetMode = false, solarSystemMode = false;
 let helpScreenZero = false, helpScreenOne = false, helpScreenTwo = false,
 helpScreenThree = false, helpScreenFour = false, helpScreenFive = false,
-helpScreenSix = false;
+helpScreenSix = false, helpScreenSeven = false;
 let helpCount = 0;
 let alertCount = 0;
 //Buttons
@@ -94,6 +94,9 @@ function setup(){
 ////////////////////////////////
 
 function draw(){
+  // hoverClick permits both touch & mouse functionality
+  hoverClickCondition();
+
   background(45, 35, 35);
   startScreen();
 //show sun + stars
@@ -118,6 +121,8 @@ function draw(){
     planetOptions[i].optionsDraw();
     optionsHighlight();
   }
+//Highlight when mouse hovers over buttons
+  buttonsHighlight()
 //help mode helpScreen
   if (helpTrigger) {
     helpModeDraw();
@@ -276,7 +281,7 @@ function helpModeDraw() {
     boundaryAlpha = 25;
   }
   if (helpScreenTwo) {
-    fill(50, 155);
+    fill(50, 105);
     gradient = rect(0, 0, width, height);
     fill(255)
     textAlign(LEFT, CENTER);
@@ -304,7 +309,7 @@ function helpModeDraw() {
     noFill();
   }
   if (helpScreenFive) {
-    fill(50, 155);
+    fill(50, 105);
     gradient = rect(0, 0, width, height);
     fill(255)
     textAlign(LEFT, CENTER);
@@ -318,8 +323,22 @@ function helpModeDraw() {
     }
   }
   if (helpScreenSix) {
+    fill(50, 105);
+    gradient = rect(0, 0, width, height);
+    fill(255)
+    textAlign(RIGHT, CENTER);
+    text('Add Chorus or Stereo Reverb to the Solar System', chorusX - chorusR*1.5, (reverbY - chorusY)/2 + chorusY);
+    noFill();
+    for (let i = 0; i < 20; i++){
+      stroke(255, 155 - (i * 10));
+      strokeWeight(1);
+      ellipse(chorusX, chorusY, chorusR*1.7 + 10 + (i + 1));
+      ellipse(reverbX, reverbY, reverbR*1.7 + 10 + (i + 1));
+    }
+  }
+  if (helpScreenSeven) {
     helpTrigger = false;
-    helpScreenSix = false;
+    helpScreenSeven = false;
   }
 }
 function infoModeDraw() {
@@ -432,60 +451,105 @@ function optionsHighlight() {
   for (let i = 0; i < planetOptions.length; i++){
     if (dist(mouseX, mouseY, planetOptions[i].pos.x, planetOptions[i].pos.y)
     < planetOptions[i].r){
-      if (helpTrigger == false){
-        planetOptions[i].optionAlpha = 150;
+        planetOptions[i].optionAlpha = 250;
         push();
         textAlign(LEFT, CENTER);
-        if (hoverClick == false) {
+        if (hoverClick == false && helpTrigger == false) {
           text(planetNames[i], planetOptions[i].pos.x +
           planetOptions[i].r/2*1.3, planetOptions[i].pos.y);
         }
         if (hoverClick) {
-          planetOptions[i].optionAlpha = 50;
+          planetOptions[i].optionAlpha = 80;
         }
         pop();
-      }
     } else if (planetMode) {
       if (hoverClick == false) {
-        planetOptions[tempPlanetIndex].optionAlpha = 150;
+        planetOptions[tempPlanetIndex].optionAlpha = 250;
       }
-      planetOptions[i].optionAlpha = 50;
+      planetOptions[i].optionAlpha = 80;
     } else {
-      planetOptions[i].optionAlpha = 50;
+      planetOptions[i].optionAlpha = 80;
     }
   }
 }
-
+function buttonsHighlight() {
+  //This code changes the alpha of the buttons when hovering over with a mouse
+  //Although its currently not being used as it acts funny with touch controls
+  if (started){
+    push();
+    textAlign(RIGHT, CENTER);
+    fill(255, 150);
+    if (hoverClick == false && dist(mouseX, mouseY, helpX, helpY) < helpR){
+      helpAlpha = 255;
+      text('Help', helpX - helpR*1.3, helpY);
+    } else if (helpTrigger == false &&
+    dist(mouseX, mouseY, helpX, helpY) > helpR) {
+      helpAlpha = 100;
+    }
+    if (hoverClick == false && dist(mouseX, mouseY, infoX, infoY) < infoR){
+      infoAlpha = 255;
+      text('Info', infoX - infoR*1.3, infoY);
+    } else if (dist(mouseX, mouseY, infoX, infoY) > infoR) {
+      infoAlpha = 100;
+    }
+    if (hoverClick == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
+      chorusAlpha = 255;
+      text('Chorus', chorusX - chorusR*1.3, chorusY);
+    } else if (chorusTrigger == false &&
+    dist(mouseX, mouseY, chorusX, chorusY) > chorusR) {
+      chorusAlpha = 100;
+    }
+    if (hoverClick == false && dist(mouseX, mouseY, reverbX, reverbY) < reverbR){
+      reverbAlpha = 255
+      text('Stereo Reverb', reverbX - reverbR*1.3, reverbY);
+    } else if (reverbTrigger == false &&
+    dist(mouseX, mouseY, reverbX, reverbY) > reverbR) {
+      reverbAlpha = 100;
+    }
+    pop();
+  }
+}
+function hoverClickCondition() {
+  //if a highlighted button on the right side is triggered off . . .
+  //turn off the highlight
+  if (started && mouseX > width/2){
+     if (hoverClick && dist(mouseX, mouseY, helpX, helpY) < helpR) {
+      hoverClick = true;
+    } else if (hoverClick && dist(mouseX, mouseY, infoX, infoY) < infoR) {
+      hoverClick = true;
+    } else if (hoverClick && dist(mouseX, mouseY, chorusX, chorusY) < chorusR) {
+      hoverClick = true;
+    } else if (hoverClick && dist(mouseX, mouseY, reverbX, reverbY) < reverbR) {
+      hoverClick = true;
+    } else {
+      hoverClick = false;
+    }
+  }
+  //if a highlighted planet menu on the left side is triggered off . . .
+  //turn off the highlight
+  if (started && mouseX < width/2){
+    for (i = 0; i < planetOptions.length; i++){
+      if (hoverClick && tempPlanetIndex == i && dist(mouseX, mouseY,
+      planetOptions[i].pos.x, planetOptions[i].pos.y) < planetOptions[i].r){
+        hoverClick = true;
+      } else if (hoverClick && tempPlanetIndex == i && dist(mouseX, mouseY,
+      planetOptions[i].pos.x, planetOptions[i].pos.y) > planetOptions[i].r)
+        hoverClick = false;
+    }
+  }
+}
 //Sound Synthesis
 function timbralProperties() {
   if (moons[tempPlanetIndex].length > 2){
-    //maps the partials of the modulator signal to the distance between
-    //moon and planet, then assigns the value to modulationType
-    let partialDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
-    partials = round(map(partialDistance, 0, height/2, 10, 100));
-    oscillators[tempPlanetIndex].modulationType = `square${partials}`;
-    //maps the harmonicity of the synth to the distance between
-    //moon and planet, then assigns the value to harmoinicty.value
-    let harmonicityDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
-    harmonicityMap = map(harmonicityDistance, 0, height/2, 0.99, 1.04);
-    oscillators[tempPlanetIndex].harmonicity.value = harmonicityMap;
-    //maps the modulation index of the synth to the distance between
-    //moon and planet, then assigns the value to modulationIndex.value
-    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, height/2, 0, 4);
-    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+    applyPartials();
+    applyHarmonicity();
+    applyModulationIndex();
   } else if (moons[tempPlanetIndex].length > 1){
-    let harmonicityDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
-    harmonicityMap = map(harmonicityDistance, 0, height/2, 0.99, 1.04);
-    oscillators[tempPlanetIndex].harmonicity.value = harmonicityMap;
-    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, height/2, 0, 4);
-    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+    applyHarmonicity();
+    applyModulationIndex();
     oscillators[tempPlanetIndex].modulationType = `square${10}`;
   } else if (moons[tempPlanetIndex].length > 0){
-    let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
-    modulationIndexMap = map(modDistance, 0, height/2, 0, 4);
-    oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+    applyModulationIndex();
     oscillators[tempPlanetIndex].modulationType = `square${10}`;
     oscillators[tempPlanetIndex].harmonicity.value = 1;
   } else if (moons[tempPlanetIndex].length == 0){
@@ -493,6 +557,27 @@ function timbralProperties() {
     oscillators[tempPlanetIndex].modulationType = `square${10}`;
     oscillators[tempPlanetIndex].harmonicity.value = 1;
   }
+}
+function applyModulationIndex(){
+  //maps the modulation index of the synth to the distance between
+  //moon and planet, then assigns the value to modulationIndex.value
+  let modDistance = dist(moons[tempPlanetIndex][0].pos.x, moons[tempPlanetIndex][0].pos.y, sun.pos.x, sun.pos.y);
+  modulationIndexMap = map(modDistance, 0, height/2, 0, 4);
+  oscillators[tempPlanetIndex].modulationIndex.value = modulationIndexMap;
+}
+function applyHarmonicity(){
+  //maps the harmonicity of the synth to the distance between
+  //moon and planet, then assigns the value to harmoinicty.value
+  let harmonicityDistance = dist(moons[tempPlanetIndex][1].pos.x, moons[tempPlanetIndex][1].pos.y, sun.pos.x, sun.pos.y);
+  harmonicityMap = map(harmonicityDistance, 0, height/2, 0.99, 1.04);
+  oscillators[tempPlanetIndex].harmonicity.value = harmonicityMap;
+}
+function applyPartials(){
+  //maps the partials of the modulator signal to the distance between
+  //moon and planet, then assigns the value to modulationType
+  let partialDistance = dist(moons[tempPlanetIndex][2].pos.x, moons[tempPlanetIndex][2].pos.y, sun.pos.x, sun.pos.y);
+  partials = round(map(partialDistance, 0, height/2, 10, 100));
+  oscillators[tempPlanetIndex].modulationType = `square${partials}`;
 }
 
 ////////////////////////////////
@@ -546,11 +631,6 @@ function createTempPlanet() {
 ////////////////////////////////
 
 function touchStarted() {
-// if a button on the right is clicked
-    if (started == true){
-      buttonClick();
-      helpModeClick();
-    }
 //begin interface with touch
   Tone.start();
     if (started == false) {
@@ -560,10 +640,13 @@ function touchStarted() {
       Tone.start();
       solarSystemMode = true;
     }
-// hoverClick permits both touch & mouse functionality
-    hoverClick = false;
 // if a planet on the left menu is clicked
     planetOptionsClick();
+// if a button on the right is clicked
+    if (started == true){
+      buttonClick();
+      helpModeClick();
+    }
 // if a planet is clicked
     planetClick();
 // if a moon is clicked
@@ -662,7 +745,9 @@ function buttonClick() {
     spaceClicked = false;
     helpScreenZero = true;
     helpAlpha = 255;
-  } else if (dist(mouseX, mouseY, helpX, helpY) < helpR*2) {
+    hoverClick = true;
+  } else if (helpTrigger == true && dist(mouseX, mouseY, helpX, helpY) < helpR*2) {
+    hoverClick = true;
     helpTrigger = false;
     spaceClicked = false;
     boundaryAlpha = 3;
@@ -672,12 +757,14 @@ function buttonClick() {
   if (infoTrigger == false && dist(mouseX, mouseY, infoX, infoY) < infoR*2){
     infoTrigger = true;
     spaceClicked = false;
+    hoverClick = true;
   } else if (infoTrigger) {
     infoTrigger = false;
     spaceClicked = false;
   }
   if (chorusTrigger == false && dist(mouseX, mouseY, chorusX, chorusY) < chorusR*2){
     chorusTrigger = true;
+    hoverClick = true;
     //turn chorus on
     chorus.frequency.value = 2;
     spaceClicked = false;
@@ -691,6 +778,7 @@ function buttonClick() {
   }
   if (reverbTrigger == false && dist(mouseX, mouseY, reverbX, reverbY) < reverbR*2){
     reverbTrigger = true;
+    hoverClick = true;
     //turn reverb on
     reverb.wet.rampTo(0.7, 0.5);
     spaceClicked = false;
@@ -705,6 +793,10 @@ function buttonClick() {
 }
 function helpModeClick() {
 //cycle through help screens
+  if (helpScreenSix) {
+    helpScreenSix = false;
+    helpScreenSeven = true;
+  }
   if(helpScreenFive && dist(mouseX, mouseY, planetOptions[tempPlanetIndex].pos.x, planetOptions[tempPlanetIndex].pos.y) < planetOptions[tempPlanetIndex].r) {
     helpScreenFive = false;
     helpScreenSix = true;
@@ -915,43 +1007,6 @@ function moonDelete() {
 
 
 //Not Being Used Currently
-function buttonsHighlight() {
-  //This code changes the alpha of the buttons when hovering over with a mouse
-  //Although its currently not being used as it acts funny with touch controls
-  if (started){
-    push();
-    textAlign(RIGHT, CENTER);
-    fill(255, 150);
-    if (dist(mouseX, mouseY, helpX, helpY) < helpR){
-      helpAlpha = 255;
-      text('Help', helpX - helpR*1.3, helpY);
-    } else if (helpTrigger == false &&
-    dist(mouseX, mouseY, helpX, helpY) > helpR) {
-      helpAlpha = 100;
-    }
-    if (dist(mouseX, mouseY, infoX, infoY) < infoR){
-      infoAlpha = 255;
-      text('Info', infoX - infoR*1.3, infoY);
-    } else if (dist(mouseX, mouseY, infoX, infoY) > infoR) {
-      infoAlpha = 100;
-    }
-    if (dist(mouseX, mouseY, chorusX, chorusY) < chorusR){
-      chorusAlpha = 255;
-      text('Chorus', chorusX - chorusR*1.3, chorusY);
-    } else if (chorusTrigger == false &&
-    dist(mouseX, mouseY, chorusX, chorusY) > chorusR) {
-      chorusAlpha = 100;
-    }
-    if (dist(mouseX, mouseY, reverbX, reverbY) < reverbR){
-      reverbAlpha = 255
-      text('Stereo Reverb', reverbX - reverbR*1.3, reverbY);
-    } else if (reverbTrigger == false &&
-    dist(mouseX, mouseY, reverbX, reverbY) > reverbR) {
-      reverbAlpha = 100;
-    }
-    pop();
-  }
-}
 function planetOutOfBounds() {
 // Deletes Planet if it Goes offscreen
   planetNumber--;
